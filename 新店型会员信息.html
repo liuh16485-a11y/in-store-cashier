@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活力坐标 Vitality Coordinates - 新店型会员信息</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", "微软雅黑", "Segoe UI", Tahoma, sans-serif;
+      background-color: #c4def3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      color: #000;
+    }
+
+    /* POS 主窗口容器 */
+    .pos-window {
+      width: 100%;
+      max-width: 980px;
+      background-color: #dcf0fb;
+      border: 1px solid #70a5d2;
+      box-shadow: 0 10px 30px rgba(0, 35, 75, 0.25);
+      display: flex;
+      flex-direction: column;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    /* 顶部系统标题栏 */
+    .window-titlebar {
+      height: 32px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px 0 12px;
+      border-bottom: 1px solid #b2d5ed;
+    }
+
+    .window-title {
+      font-size: 14.5px;
+      font-weight: bold;
+      color: #1a1a1a;
+      letter-spacing: 0.5px;
+    }
+
+    .window-btn-close {
+      width: 30px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      color: #444;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    .window-btn-close:hover {
+      background-color: #e81123;
+      color: #ffffff;
+    }
+
+    /* 窗体内容区 */
+    .pos-content {
+      padding: 16px 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 440px;
+    }
+
+    /* 顶部会员快捷卡片栏 */
+    .member-tabs-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .member-tabs {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+      overflow-x: auto;
+    }
+
+    .member-card {
+      min-width: 130px;
+      height: 56px;
+      background: #ffffff;
+      border: 1px solid #7eaed3;
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1.35;
+      color: #111;
+      transition: all 0.1s ease-in-out;
+    }
+
+    .member-card:hover {
+      background-color: #ebf6ff;
+      border-color: #009fe8;
+    }
+
+    /* 选中卡片样式：亮青蓝底，黑色粗边框 */
+    .member-card.active {
+      background-color: #00a2e8;
+      border: 2px solid #000000;
+      color: #000000;
+      font-weight: bold;
+    }
+
+    .member-card .name {
+      font-size: 15px;
+    }
+
+    .member-card .card-no {
+      font-size: 13.5px;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    /* 右侧翻页按钮 >> */
+    .btn-next-page {
+      width: 26px;
+      height: 56px;
+      background: #ffffff;
+      border: 1px solid #7eaed3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #0070c0;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .btn-next-page:hover {
+      background: #e1f1fc;
+      border-color: #0070c0;
+    }
+
+    /* 会员核心信息表格（已删除第一病种、临新药及口播话术） */
+    .table-panel {
+      border: 1px solid #85b8e0;
+      background: #dcf0fb;
+      box-shadow: 0 1px 3px rgba(0, 50, 100, 0.08);
+    }
+
+    .pos-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    /* 表头 */
+    .pos-table th {
+      background-color: #0070c0;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 9px 16px;
+      text-align: left;
+      letter-spacing: 1px;
+      border: 1px solid #005a9c;
+    }
+
+    /* 单元格 */
+    .pos-table td {
+      border: 1px solid #85b8e0;
+      padding: 14px 18px;
+      font-size: 15px;
+      vertical-align: middle;
+      background-color: #dcf0fb;
+    }
+
+    /* 会员基本信息字段展示 (只保留姓名、电话、生日) */
+    .basic-field {
+      color: #111;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      font-size: 15.5px;
+    }
+
+    .basic-field .field-label {
+      color: #222;
+      width: 55px;
+      display: inline-block;
+      font-weight: normal;
+    }
+
+    .basic-field .field-value {
+      color: #000;
+      font-weight: bold;
+      font-size: 15.5px;
+      letter-spacing: 0.5px;
+    }
+
+    /* 底部按钮栏 */
+    .bottom-actions {
+      margin-top: auto;
+      padding-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pos-btn {
+      min-width: 114px;
+      height: 36px;
+      background-color: #009fe8;
+      color: #ffffff;
+      border: 1px solid #0081be;
+      font-size: 14.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      transition: background-color 0.15s, transform 0.05s;
+    }
+
+    .pos-btn:hover {
+      background-color: #008cd0;
+    }
+
+    .pos-btn:active {
+      background-color: #0078b3;
+      transform: translateY(1px);
+    }
+
+    /* 模态弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 500px;
+      background: #ffffff;
+      border: 2px solid #0070c0;
+      border-radius: 3px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.3);
+      overflow: hidden;
+      animation: modalFadeIn 0.18s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      background: #0070c0;
+      color: #ffffff;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .modal-close {
+      cursor: pointer;
+      font-size: 16px;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-body {
+      padding: 18px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: #333;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .modal-body h4 {
+      color: #0070c0;
+      margin: 10px 0 4px 0;
+      font-size: 14.5px;
+    }
+
+    .modal-body h4:first-child {
+      margin-top: 0;
+    }
+
+    .modal-body ul {
+      margin-left: 20px;
+      margin-bottom: 8px;
+    }
+
+    .modal-footer {
+      padding: 10px 16px;
+      background: #f7f9fa;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* 页面操作反馈 Toast */
+    .toast-box {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 25, 33, 0.88);
+      color: #ffffff;
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 2000;
+    }
+
+    .toast-box.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="pos-window" id="posWindow">
+    
+    <!-- 1. 窗口标题栏 -->
+    <div class="window-titlebar">
+      <div class="window-title">活力坐标 Vitality Coordinates</div>
+      <div class="window-controls">
+        <div class="window-btn-close" id="btnClose" title="关闭窗口">✕</div>
+      </div>
+    </div>
+
+    <!-- 2. 窗口主体内容 -->
+    <div class="pos-content">
+      
+      <!-- 顶部会员快捷卡片栏 -->
+      <div class="member-tabs-wrapper">
+        <div class="member-tabs" id="memberTabs">
+          <!-- 动态渲染卡片 -->
+        </div>
+        <div class="btn-next-page" id="btnNextPage" title="切换下一位会员">&gt;&gt;</div>
+      </div>
+
+      <!-- [已按需求删除原界面中的第一病种与临新药标签区域、并删除口播话术] -->
+
+      <!-- 主信息表格：会员基本信息（仅保留姓名、电话、生日） -->
+      <div class="table-panel">
+        <table class="pos-table">
+          <thead>
+            <tr>
+              <th>会员基本信息</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody">
+            <tr>
+              <td>
+                <div class="basic-field">
+                  <span class="field-label">姓名:</span>
+                  <span class="field-value" id="valName">赵**</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="basic-field">
+                  <span class="field-label">电话:</span>
+                  <span class="field-value" id="valPhone">188****6060</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="basic-field">
+                  <span class="field-label">生日:</span>
+                  <span class="field-value" id="valBirthday">19960819</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3. 底部操作按钮 -->
+      <div class="bottom-actions">
+        <button type="button" class="pos-btn" id="btnRules">会员规则说明[H]</button>
+        <button type="button" class="pos-btn" id="btnConfirm">确定[Enter]</button>
+        <button type="button" class="pos-btn" id="btnCancel">取消[Esc]</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 模态弹窗：会员规则说明 -->
+  <div class="modal-overlay" id="rulesModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>活力坐标 - 会员规则说明 [H]</span>
+        <span class="modal-close" id="modalClose">✕</span>
+      </div>
+      <div class="modal-body">
+        <h4>一、新店型会员信息精简规范</h4>
+        <ul>
+          <li>新店型界面已精简会员信息，仅保留核心要素：<strong>姓名、电话、生日</strong>。</li>
+          <li>去除了临新药、第一病种展示以及口播话术，突出收银服务与快速核验。</li>
+        </ul>
+
+        <h4>二、会员权益说明</h4>
+        <ul>
+          <li><strong>生日权益：</strong>生日当月享有专属会员生日礼及多倍积分。</li>
+          <li><strong>快捷结算：</strong>支持快捷键 Enter 确认、Esc 取消、H 查看说明。</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="pos-btn" id="modalConfirm">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div class="toast-box" id="toastBox"></div>
+
+  <script>
+    // 模拟会员数据
+    const members = [
+      {
+        id: "4301004100038041",
+        cardBrief: "430****8041",
+        name: "赵**",
+        phone: "188****6060",
+        birthday: "19960819"
+      },
+      {
+        id: "4301004100038042",
+        cardBrief: "430****8042",
+        name: "钱**",
+        phone: "139****8042",
+        birthday: "19881105"
+      },
+      {
+        id: "4301004100038043",
+        cardBrief: "430****8043",
+        name: "周**",
+        phone: "137****8043",
+        birthday: "19750322"
+      },
+      {
+        id: "4301004100038045",
+        cardBrief: "430****8045",
+        name: "吴**",
+        phone: "150****8045",
+        birthday: "20011210"
+      },
+      {
+        id: "4301004100038044",
+        cardBrief: "430****8044",
+        name: "菜**",
+        phone: "186****8044",
+        birthday: "19830516"
+      }
+    ];
+
+    let currentIdx = 0;
+
+    // 获取元素
+    const tabsContainer = document.getElementById("memberTabs");
+    const valName = document.getElementById("valName");
+    const valPhone = document.getElementById("valPhone");
+    const valBirthday = document.getElementById("valBirthday");
+
+    const rulesModal = document.getElementById("rulesModal");
+    const btnRules = document.getElementById("btnRules");
+    const btnConfirm = document.getElementById("btnConfirm");
+    const btnCancel = document.getElementById("btnCancel");
+    const btnClose = document.getElementById("btnClose");
+    const modalClose = document.getElementById("modalClose");
+    const modalConfirm = document.getElementById("modalConfirm");
+    const btnNextPage = document.getElementById("btnNextPage");
+    const toastBox = document.getElementById("toastBox");
+
+    // 渲染顶部卡片
+    function renderTabs() {
+      tabsContainer.innerHTML = "";
+      members.forEach((m, idx) => {
+        const card = document.createElement("div");
+        card.className = `member-card ${idx === currentIdx ? "active" : ""}`;
+        card.innerHTML = `
+          <div class="name">${m.name}</div>
+          <div class="card-no">${m.cardBrief}</div>
+        `;
+        card.addEventListener("click", () => switchMember(idx));
+        tabsContainer.appendChild(card);
+      });
+    }
+
+    // 切换会员
+    function switchMember(idx) {
+      currentIdx = idx;
+      renderTabs();
+      updateDetails();
+    }
+
+    // 更新详情
+    function updateDetails() {
+      const cur = members[currentIdx];
+      valName.textContent = cur.name;
+      valPhone.textContent = cur.phone;
+      valBirthday.textContent = cur.birthday;
+    }
+
+    // Toast 提示
+    function showToast(msg) {
+      toastBox.textContent = msg;
+      toastBox.classList.add("show");
+      setTimeout(() => {
+        toastBox.classList.remove("show");
+      }, 2000);
+    }
+
+    // 弹窗
+    function openModal() {
+      rulesModal.classList.add("active");
+    }
+
+    function closeModal() {
+      rulesModal.classList.remove("active");
+    }
+
+    // 事件监听
+    btnRules.addEventListener("click", openModal);
+    modalClose.addEventListener("click", closeModal);
+    modalConfirm.addEventListener("click", closeModal);
+
+    btnConfirm.addEventListener("click", () => {
+      const cur = members[currentIdx];
+      showToast(`已确认会员：${cur.name} (${cur.phone})`);
+    });
+
+    btnCancel.addEventListener("click", () => {
+      showToast("操作已取消");
+    });
+
+    btnClose.addEventListener("click", () => {
+      showToast("已关闭窗口");
+    });
+
+    btnNextPage.addEventListener("click", () => {
+      const next = (currentIdx + 1) % members.length;
+      switchMember(next);
+      showToast(`切换至: ${members[next].name}`);
+    });
+
+    // 快捷键支持
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (rulesModal.classList.contains("active")) {
+          closeModal();
+        } else {
+          btnConfirm.click();
+        }
+      } else if (e.key === "Escape") {
+        if (rulesModal.classList.contains("active")) {
+          closeModal();
+        } else {
+          btnCancel.click();
+        }
+      } else if (e.key === "h" || e.key === "H") {
+        openModal();
+      }
+    });
+
+    // 初始化渲染
+    renderTabs();
+    updateDetails();
+  </script>
+</body>
+</html>

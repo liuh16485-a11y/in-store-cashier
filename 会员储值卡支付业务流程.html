@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会员储值卡支付业务流程图</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: #f3f5f8;
+      color: #1f2328;
+      padding: 30px 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 920px;
+      background: #ffffff;
+      border: 1px solid #d8dee4;
+      border-radius: 8px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+      padding: 32px 36px;
+    }
+
+    .header {
+      border-bottom: 1px solid #e1e4e8;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+
+    .header h2 {
+      font-size: 21px;
+      font-weight: 600;
+      color: #0969da;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 13.5px;
+      color: #57606a;
+    }
+
+    /* 流程图 SVG 视窗容器 */
+    .flowchart-canvas {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 16px 10px;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* 规则说明卡片 */
+    .rule-card {
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 16px 20px;
+    }
+
+    .rule-card h3 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #24292f;
+      margin-bottom: 8px;
+    }
+
+    .rule-card ol {
+      margin-left: 20px;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #424a53;
+    }
+
+    .rule-card strong {
+      color: #1f2328;
+    }
+
+    .rule-card code {
+      background: #eef1f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: Consolas, monospace;
+      font-size: 12.5px;
+      color: #0969da;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div class="header">
+      <h2>会员储值卡支付业务流程图</h2>
+      <p>标准收银流程规范 · 纯原生矢量渲染（离线即用，无需任何外网依赖）</p>
+    </div>
+
+    <!-- 纯原生矢量 SVG 流程图，绝不白屏，100% 离线完美展示 -->
+    <div class="flowchart-canvas">
+      <svg width="820" height="780" viewBox="0 0 820 780" xmlns="http://www.w3.org/2000/svg">
+        
+        <!-- 箭头标记定义 -->
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0969da" />
+          </marker>
+          <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#cf222e" />
+          </marker>
+        </defs>
+
+        <!-- 1. 起点：选择会员储值卡支付 -->
+        <rect x="250" y="20" width="220" height="42" rx="21" ry="21" fill="#0969da" />
+        <text x="360" y="46" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle">选择【会员储值卡支付】</text>
+
+        <!-- 连接线 1 -->
+        <path d="M 360 62 L 360 105" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+
+        <!-- 2. 判定：是否已录入会员？ -->
+        <polygon points="360,105 455,145 360,185 265,145" fill="#fff8e5" stroke="#d4a72c" stroke-width="2" />
+        <text x="360" y="149" fill="#7a4f01" font-size="13.5" font-weight="600" text-anchor="middle">是否已录入会员？</text>
+
+        <!-- 分支 2-A：否（拦截提示） -->
+        <path d="M 455 145 L 535 145" stroke="#cf222e" stroke-width="2" marker-end="url(#arrow-red)" fill="none" />
+        <text x="490" y="137" fill="#cf222e" font-size="12" font-weight="bold" text-anchor="middle">否</text>
+
+        <!-- 拦截提示框 -->
+        <rect x="540" y="118" width="260" height="54" rx="4" ry="4" fill="#ffebe9" stroke="#ff8182" stroke-width="1.5" />
+        <text x="670" y="139" fill="#cf222e" font-size="12" font-weight="bold" text-anchor="middle">🚫 拦截提示：</text>
+        <text x="670" y="157" fill="#82071e" font-size="11.5" text-anchor="middle">“会员专属支付方式，请先返回购物车录入会员！”</text>
+
+        <!-- 分支 2-B：是（正常查询） -->
+        <path d="M 360 185 L 360 225" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+        <text x="375" y="206" fill="#0969da" font-size="12" font-weight="bold">是</text>
+
+        <!-- 3. 过程：通过会员号查询储值卡 -->
+        <rect x="210" y="225" width="300" height="56" rx="6" ry="6" fill="#f0f7ff" stroke="#0969da" stroke-width="1.5" />
+        <text x="360" y="248" fill="#0969da" font-size="13.5" font-weight="600" text-anchor="middle">通过会员号进行会员储值卡查询</text>
+        <text x="360" y="267" fill="#57606a" font-size="12" text-anchor="middle">展示信息：会员姓名、卡状态、卡余额、扣款金额</text>
+
+        <!-- 连接线 3 -->
+        <path d="M 360 281 L 360 318" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+
+        <!-- 4. 过程：扣款金额默认值 -->
+        <rect x="210" y="318" width="300" height="46" rx="6" ry="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" />
+        <text x="360" y="340" fill="#24292f" font-size="13" font-weight="600" text-anchor="middle">【扣款金额】默认填入</text>
+        <text x="360" y="356" fill="#0969da" font-size="12.5" font-weight="bold" text-anchor="middle">Min(待付金额, 卡余额)</text>
+
+        <!-- 连接线 4 -->
+        <path d="M 360 364 L 360 400" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+
+        <!-- 5. 判定：是否修改金额且超出上限？ -->
+        <polygon points="360,400 485,445 360,490 235,445" fill="#fff8e5" stroke="#d4a72c" stroke-width="2" />
+        <text x="360" y="440" fill="#7a4f01" font-size="12.5" font-weight="600" text-anchor="middle">人工编辑修改金额</text>
+        <text x="360" y="458" fill="#cf222e" font-size="11.5" font-weight="bold" text-anchor="middle">&gt; Min(待付金额, 卡余额) ?</text>
+
+        <!-- 分支 5-A：是（超额纠偏） -->
+        <path d="M 485 445 L 555 445" stroke="#cf222e" stroke-width="2" marker-end="url(#arrow-red)" fill="none" />
+        <text x="515" y="437" fill="#cf222e" font-size="12" font-weight="bold" text-anchor="middle">是 (超限)</text>
+
+        <!-- 纠偏框 -->
+        <rect x="560" y="423" width="225" height="44" rx="4" ry="4" fill="#fff8f8" stroke="#ff8182" stroke-width="1.5" />
+        <text x="672" y="443" fill="#cf222e" font-size="12" font-weight="bold" text-anchor="middle">⚠️ 自动更新重置为：</text>
+        <text x="672" y="459" fill="#24292f" font-size="11.5" text-anchor="middle">Min(待付金额, 卡余额)</text>
+
+        <!-- 纠偏回流线至确定 -->
+        <path d="M 672 467 L 672 546 L 460 546" stroke="#cf222e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)" fill="none" />
+
+        <!-- 分支 5-B：否（直接确认） -->
+        <path d="M 360 490 L 360 528" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+        <text x="375" y="510" fill="#0969da" font-size="12" font-weight="bold">否</text>
+
+        <!-- 6. 操作：点击【确定】 -->
+        <rect x="270" y="528" width="180" height="38" rx="4" ry="4" fill="#0969da" stroke="#044289" stroke-width="1.5" />
+        <text x="360" y="552" fill="#ffffff" font-size="13.5" font-weight="600" text-anchor="middle">点击【确定】</text>
+
+        <!-- 连接线 6 -->
+        <path d="M 360 566 L 360 600" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+
+        <!-- 7. 判定：根据企迈密码标签判断 -->
+        <polygon points="360,600 460,638 360,676 260,638" fill="#fff8e5" stroke="#d4a72c" stroke-width="2" />
+        <text x="360" y="634" fill="#7a4f01" font-size="12" font-weight="600" text-anchor="middle">企迈返回密码标签：</text>
+        <text x="360" y="650" fill="#7a4f01" font-size="12.5" font-weight="bold" text-anchor="middle">是否需录入密码？</text>
+
+        <!-- 分支 7-A：需录入密码 -->
+        <path d="M 460 638 L 540 638" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+        <text x="495" y="630" fill="#0969da" font-size="12" font-weight="bold" text-anchor="middle">需密码</text>
+
+        <!-- 密码输入框 -->
+        <rect x="545" y="618" width="180" height="40" rx="4" ry="4" fill="#f0f7ff" stroke="#0969da" stroke-width="1.5" />
+        <text x="635" y="643" fill="#0969da" font-size="12.5" font-weight="600" text-anchor="middle">🔑 弹出密码框，填写密码</text>
+
+        <!-- 密码框引下线 -->
+        <path d="M 635 658 L 635 735 L 475 735" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+
+        <!-- 分支 7-B：不需录入密码（直连扣费） -->
+        <path d="M 360 676 L 360 714" stroke="#0969da" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+        <text x="375" y="695" fill="#1a7f37" font-size="12" font-weight="bold">不需密码</text>
+
+        <!-- 8. 终点：发起支付扣费 -->
+        <rect x="250" y="714" width="220" height="42" rx="21" ry="21" fill="#1a7f37" stroke="#116327" stroke-width="1.5" />
+        <text x="360" y="740" fill="#ffffff" font-size="14" font-weight="600" text-anchor="middle">⚡ 发起支付扣费</text>
+
+      </svg>
+    </div>
+
+    <!-- 底部核心业务规则清单 -->
+    <div class="rule-card">
+      <h3>📋 核心业务规则逻辑说明</h3>
+      <ol>
+        <li><strong>会员强校验门槛</strong>：未录入会员时点击，严密拦截提示：<code>会员专属支付方式，请先返回购物车录入会员，再进行会员储值卡支付！</code>。</li>
+        <li><strong>资产信息回显</strong>：携带会员号查询企迈接口，回显：会员姓名、卡状态、卡余额、扣款金额。</li>
+        <li><strong>扣款金额防呆</strong>：默认值 = <code>Min(待付金额, 卡余额)</code>；若手工修改金额超出上限，系统自动更新重置为 <code>Min(待付金额, 卡余额)</code>。</li>
+        <li><strong>密码标签分流</strong>：需密则弹窗输入密码后扣费；免密则点击确定直接发起扣费。</li>
+      </ol>
+    </div>
+
+  </div>
+
+</body>
+</html>

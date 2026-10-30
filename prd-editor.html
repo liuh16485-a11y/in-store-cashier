@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活力坐标移动收银 - PRD在线交互编辑器</title>
+  <style>
+    :root {
+      --primary: #0070c0;
+      --primary-hover: #005a9e;
+      --bg-dark: #1e1e1e;
+      --border: #e1e4e8;
+      --text: #24292e;
+      --success: #52c41a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f8f9fa;
+      color: var(--text);
+      overflow: hidden;
+    }
+    .header-bar {
+      height: 52px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      z-index: 10;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .doc-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    .status-pill {
+      font-size: 12px;
+      color: #52c41a;
+      background: #f6ffed;
+      border: 1px solid #b7eb8f;
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      padding: 6px 13px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #f0f2f5; border-color: #c0c4cc; }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+    .view-toggle-group {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .view-toggle-btn {
+      border: none;
+      padding: 6px 12px;
+      font-size: 12px;
+      background: #fff;
+      cursor: pointer;
+      color: #666;
+    }
+    .view-toggle-btn.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .pane {
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .pane-header {
+      height: 34px;
+      background: #f1f3f6;
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+    }
+    .editor-pane {
+      border-right: 1px solid var(--border);
+      background: #fff;
+    }
+    .md-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 16px 20px;
+      font-family: Consolas, "Fira Code", Monaco, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #24292e;
+      background: #fff;
+      resize: none;
+      tab-size: 2;
+    }
+    .preview-pane {
+      background: #fff;
+    }
+    .preview-content {
+      flex: 1;
+      padding: 24px 36px 60px;
+      overflow-y: auto;
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: #2c3e50;
+    }
+    .preview-content h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #005090;
+      border-bottom: 2px solid #e1e4e8;
+      padding-bottom: 8px;
+      margin: 20px 0 14px;
+    }
+    .preview-content h2 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0070c0;
+      border-bottom: 1px solid #eaecef;
+      padding-bottom: 6px;
+      margin: 18px 0 12px;
+    }
+    .preview-content h3 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #333;
+      margin: 14px 0 8px;
+    }
+    .preview-content p {
+      margin-bottom: 12px;
+    }
+    .preview-content ul, .preview-content ol {
+      margin: 0 0 14px 24px;
+    }
+    .preview-content li {
+      margin-bottom: 5px;
+    }
+    .preview-content blockquote {
+      border-left: 4px solid #0070c0;
+      background: #f4f8fb;
+      padding: 10px 16px;
+      margin: 12px 0;
+      color: #555;
+      border-radius: 0 6px 6px 0;
+    }
+    .preview-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 13.5px;
+    }
+    .preview-content th, .preview-content td {
+      border: 1px solid #d0d7de;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .preview-content th {
+      background: #f0f5fa;
+      font-weight: 600;
+      color: #004b87;
+    }
+    .preview-content tr:nth-child(even) td {
+      background: #fafbfc;
+    }
+    .preview-content pre {
+      background: #f6f8fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 14px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .preview-content code {
+      background: #f0f2f5;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 12.5px;
+      color: #d14;
+    }
+    .preview-content pre code {
+      background: transparent;
+      padding: 0;
+      color: #24292e;
+    }
+    .toast {
+      position: fixed;
+      top: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 1000;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <header class="header-bar">
+    <div class="header-left">
+      <span class="logo-badge">活力坐标 POS</span>
+      <span class="doc-title">店内收银产品需求文档 (PRD) · 在线直接编辑</span>
+      <span class="status-pill" id="saveStatusIndicator">● 本地已自动同步</span>
+    </div>
+    <div class="header-right">
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" id="btnSplit" onclick="setViewMode('split')">左右分栏</button>
+        <button class="view-toggle-btn" id="btnEdit" onclick="setViewMode('edit')">仅编辑</button>
+        <button class="view-toggle-btn" id="btnPreview" onclick="setViewMode('preview')">仅预览</button>
+      </div>
+      <button class="btn" onclick="copyMarkdown()" title="复制全部Markdown源码">📋 复制源码</button>
+      <button class="btn btn-primary" onclick="downloadMarkdown()" title="保存并下载 .md 文件到本地">💾 保存下载 MD</button>
+      <button class="btn" onclick="openWordPrompt()" title="查看已生成的 Word 文档">📄 查看 Word 文档</button>
+      <button class="btn" onclick="window.print()" title="打印或另存为 PDF">🖨️ 打印/PDF</button>
+      <button class="btn" onclick="resetInitial()" style="color:#f5222d;" title="恢复为系统初始标准PRD">🔄 重置文档</button>
+    </div>
+  </header>
+
+  <div class="workspace" id="workspace">
+    <div class="pane editor-pane" id="editorPane">
+      <div class="pane-header">
+        <span>📝 MARKDOWN 源码实时编辑器 (支持键盘自由键入/修改)</span>
+        <span id="charCountText">0 字符</span>
+      </div>
+      <textarea class="md-textarea" id="mdEditor" oninput="onEditorInput()" placeholder="在此直接编辑Markdown文本..."></textarea>
+    </div>
+    <div class="pane preview-pane" id="previewPane">
+      <div class="pane-header">
+        <span>👁️ 实时排版预览视口 (随左侧输入同步动态更新)</span>
+        <span>可双击或滚动浏览</span>
+      </div>
+      <div class="preview-content" id="previewContent"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已同步保存</div>
+
+  <script>
+    const DEFAULT_MD = "# \u6d3b\u529b\u5750\u6807\uff08Vitality Coordinates\uff09\u5e97\u5185\u79fb\u52a8\u6536\u94f6\u7cfb\u7edf\n## \u4ea7\u54c1\u9700\u6c42\u6587\u6863 (PRD - Product Requirement Document)\n\n> **\u5f53\u524d\u7248\u672c**\uff1aV1.4  \n> **\u6587\u6863\u5bc6\u7ea7**\uff1a\u5185\u90e8\u4ea7\u54c1\u89c4\u8303  \n> **\u9762\u5411\u5bf9\u8c61**\uff1a\u4ea7\u54c1\u7ecf\u7406\u3001\u95e8\u5e97\u8fd0\u8425\u3001\u4e1a\u52a1\u7ba1\u7406\u5c42\u3001UI/UX \u8bbe\u8ba1\u5e08\u3001\u6d4b\u8bd5\u56e2\u961f\u3001\u5408\u89c4\u5ba1\u8ba1  \n> **\u9002\u7528\u7ec8\u7aef**\uff1aPDA \u667a\u80fd\u624b\u6301\u7ec8\u7aef / \u667a\u80fd\u624b\u673a / \u79fb\u52a8 POS \u6536\u94f6\u673a  \n> **\u5bf9\u5e94\u539f\u578b**\uff1a[\u624b\u673a\u7aef\u5e97\u5185\u6536\u94f6.html](file:///c:/\u6587\u4ef6/\u8c37\u6b4cAI/\u8001\u767e\u59d3/\u65b0\u5e97\u578b/\u624b\u673a\u7aef\u5e97\u5185\u6536\u94f6.html)\n\n---\n\n## \u76ee\u5f55\n1. [\u6587\u6863\u6982\u8ff0](#1-\u6587\u6863\u6982\u8ff0)\n2. [\u4e1a\u52a1\u6d41\u7a0b\u56fe](#2-\u4e1a\u52a1\u6d41\u7a0b\u56fe)\n3. [\u529f\u80fd\u89c4\u683c\u8be6\u8ff0](#3-\u529f\u80fd\u89c4\u683c\u8be6\u8ff0)\n   - 3.1 [\u5de5\u4f5c\u53f0\u521d\u59cb\u6001\u4e0e\u573a\u666f\u5b9a\u4f4d](#31-\u5de5\u4f5c\u53f0\u521d\u59cb\u6001\u4e0e\u573a\u666f\u5b9a\u4f4d)\n   - 3.2 [\u4f1a\u5458\u8eab\u4efd\u667a\u80fd\u8bc6\u522b\u4e0e\u80f6\u56ca\u4ea4\u4e92](#32-\u4f1a\u5458\u8eab\u4efd\u667a\u80fd\u8bc6\u522b\u4e0e\u80f6\u56ca\u4ea4\u4e92)\n   - 3.3 [\u836f\u54c1\u68c0\u7d22\u4e0e\u56fd\u5bb6\u8ffd\u6eaf\u7801\u4e00\u952e\u6838\u9a8c](#33-\u836f\u54c1\u68c0\u7d22\u4e0e\u56fd\u5bb6\u8ffd\u6eaf\u7801\u4e00\u952e\u6838\u9a8c)\n   - 3.4 [\u7535\u5b50\u5904\u65b9\u5355\u667a\u80fd\u7ba1\u7406\u4e0e\u8ffd\u6eaf\u7801 1:1 \u9010\u76d2\u5408\u89c4\u91c7\u96c6](#34-\u7535\u5b50\u5904\u65b9\u5355\u667a\u80fd\u7ba1\u7406\u4e0e\u8ffd\u6eaf\u7801-11-\u9010\u76d2\u5408\u89c4\u91c7\u96c6)\n   - 3.5 [\u8d2d\u7269\u8f66\u6d41\u8f6c\u4e0e\u4ef7\u683c\u52a8\u6001\u8054\u52a8](#35-\u8d2d\u7269\u8f66\u6d41\u8f6c\u4e0e\u4ef7\u683c\u52a8\u6001\u8054\u52a8)\n   - 3.6 [\u4fc3\u9500\u5957\u9910\u81ea\u52a8\u5316\u9996\u9009\u673a\u5236](#36-\u4fc3\u9500\u5957\u9910\u81ea\u52a8\u5316\u9996\u9009\u673a\u5236)\n   - 3.7 [\u591a\u5143\u652f\u4ed8\u7ed3\u7b97\u4e0e\u53cd\u626b\u95ed\u73af](#37-\u591a\u5143\u652f\u4ed8\u7ed3\u7b97\u4e0e\u53cd\u626b\u95ed\u73af)\n   - 3.8 [\u4ea4\u6613\u5b8c\u6210\u4e0e\u4e0b\u4e00\u5355\u81ea\u52a8\u5316\u91cd\u7f6e](#38-\u4ea4\u6613\u5b8c\u6210\u4e0e\u4e0b\u4e00\u5355\u81ea\u52a8\u5316\u91cd\u7f6e)\n4. [\u4e1a\u52a1\u5f02\u5e38\u77e9\u9635\u4e0e\u9632\u5fa1\u7b56\u7565](#4-\u4e1a\u52a1\u5f02\u5e38\u77e9\u9635\u4e0e\u9632\u5fa1\u7b56\u7565)\n\n---\n\n## 1. \u6587\u6863\u6982\u8ff0\n\n### 1.1 \u7248\u672c\u8bf4\u660e\n| \u7248\u672c\u53f7 | \u751f\u6548\u65e5\u671f | \u72b6\u6001 | \u89c4\u683c\u8bf4\u660e |\n| :---: | :---: | :---: | :--- |\n| **V1.4** | 2026-10-29 | **\u5f53\u524d\u7248\u672c** | \u57fa\u4e8e\u201c\u6d3b\u529b\u5750\u6807\u201d\u65b0\u5e97\u578b\u89c4\u8303\u6784\u5efa\u7684\u79fb\u52a8\u6536\u94f6\u6574\u4f53\u65b9\u6848\uff0c\u6db5\u76d6\u521d\u59cb\u7a7a\u7f6e\u88c5\u8f7d\u3001\u4f1a\u5458\u667a\u80fd\u8def\u7531\u4e0e\u80f6\u56ca\u4ea4\u4e92\u300120\u4f4d\u56fd\u5bb6\u8ffd\u6eaf\u7801\u4e00\u952e\u6838\u9a8c\u5165\u8f66\u3001\u7535\u5b50\u5904\u65b9\u7a81\u51fa\u60a3\u8005/\u8bca\u65ad\u4e0e\u591a\u5355\u7d2f\u52a0\u63d0\u5355\u3001\u5904\u65b9\u836f1:1\u9010\u76d2\u5f3a\u5408\u89c4\u91c7\u96c6\u6821\u9a8c\u3001\u4fc3\u9500\u5957\u9910\u9ed8\u8ba4\u4f18\u9009\u62b5\u6263\u3001\u805a\u5408\u540e\u7f6e\u53cd\u626b\u987e\u5ba2\u7801\u3001\u50a8\u503c\u5361\u81ea\u9002\u5e94\u6263\u51cf\u53ca6\u4f4d\u5b89\u5168PIN\u9274\u6743\u7b49\u5168\u6d41\u7a0b\u529f\u80fd\u3002 |\n\n### 1.2 \u4ea7\u54c1\u5b9a\u4f4d\n\u57fa\u4e8e\u79fb\u52a8\u624b\u6301\u7ec8\u7aef\uff08PDA/\u624b\u673a\uff09\u7684\u65b0\u4e00\u4ee3\u667a\u6167\u836f\u623f\u79fb\u52a8\u6536\u94f6\u7cfb\u7edf\uff0c\u96c6\u6210\u201c\u8d27\u67b6\u65c1\u79fb\u52a8\u6536\u94f6\u201d\u3001\u201c\u7535\u5b50\u5904\u65b9\u5feb\u901f\u6838\u9a8c\u201d\u3001\u201c\u56fd\u5bb6\u836f\u54c1\u7535\u5b50\u8ffd\u6eaf\u7801 100% \u9010\u76d2\u5408\u89c4\u91c7\u96c6\u201d\u3001\u201c\u4f1a\u5458\u50a8\u503c\u5361\u4fbf\u6377\u5b89\u5168\u652f\u4ed8\u201d\u4e8e\u4e00\u4f53\u7684\u9ad8\u6027\u80fd\u7aef\u4fa7\u5e94\u7528\u3002\n\n---\n\n## 2. \u4e1a\u52a1\u6d41\u7a0b\u56fe\n\n### 2.1 \u7aef\u5230\u7aef\u4e1a\u52a1\u6d41\u7a0b\u56fe\n\n> **\u6d41\u7a0b\u56fe\u9884\u89c8\uff08\u56fe\u8868\u76f4\u89c2\u67e5\u770b\u4e0e Mermaid \u4ee3\u7801\u53cc\u6a21\u5f0f\uff09\uff1a**\n\n![\u4e1a\u52a1\u6d41\u7a0b\u56fe](\u4e1a\u52a1\u6d41\u7a0b\u56fe.png)\n\n```mermaid\nflowchart TD\n    %% \u6837\u5f0f\u5b9a\u4e49\uff1a\u4f18\u96c5\u5927\u65b9\u7684\u5546\u52a1\u84dd\u7eff\u914d\u8272\n    classDef startPill fill:#0070c0,stroke:#004b87,stroke-width:2px,color:#fff;\n    classDef stepCard fill:#ffffff,stroke:#1890ff,stroke-width:1.5px,color:#003a8c;\n    classDef subCard fill:#f0f7ff,stroke:#91d5ff,stroke-width:1.2px,color:#0050b3;\n    classDef payCard fill:#fff7e6,stroke:#ffd591,stroke-width:1.2px,color:#873800;\n    classDef endPill fill:#1b803a,stroke:#0d5924,stroke-width:2px,color:#fff;\n\n    Step1([\"1. \u8fdb\u5165\u5e97\u5185\u6536\u94f6\"]):::startPill --> Step2[\"2. \u5f55\u5165\u4f1a\u5458\"]:::stepCard\n\n    Step2 --> Step3{\"3. \u6dfb\u54c1\u65b9\u5f0f\"}:::stepCard\n\n    %% \u6dfb\u54c1\u4e09\u79cd\u65b9\u5f0f\n    Step3 -->|3.1 \u626b69\u7801| Step3_1[\"\u626b69\u7801\u6dfb\u52a0\u5546\u54c1\"]:::subCard\n    Step3_1 --> Step3_1_1[\"\u9009\u62e9\u6279\u53f7\"]:::subCard\n\n    Step3 -->|3.2 \u626b\u8ffd\u6eaf\u7801| Step3_2[\"\u626b\u8ffd\u6eaf\u7801\u6dfb\u52a0\u5546\u54c1\"]:::subCard\n\n    Step3 -->|3.3 \u63d0\u53d6\u5904\u65b9\u5355| Step3_3[\"\u63d0\u53d6\u5904\u65b9\u5355\"]:::subCard\n    Step3_3 --> Step3_3_1[\"\u91c7\u96c6\u8ffd\u6eaf\u7801\"]:::subCard\n\n    %% \u6c47\u805a\u5230\u53bb\u6536\u94f6\n    Step3_1_1 --> Step4[\"4. \u53bb\u6536\u94f6\"]:::stepCard\n    Step3_2 --> Step4\n    Step3_3_1 --> Step4\n\n    Step4 --> Step5[\"5. \u9009\u62e9\u4fc3\u9500\u5957\u9910\"]:::stepCard\n    Step5 --> Step6{\"6. \u9009\u62e9\u652f\u4ed8\u65b9\u5f0f\"}:::stepCard\n\n    %% \u652f\u4ed8\u4e09\u79cd\u65b9\u5f0f\n    Step6 -->|6.1 \u805a\u5408\u6536\u6b3e| Step6_1[\"\u805a\u5408\u6536\u6b3e: \u5524\u8d77\u626b\u7801\u6444\u50cf\u5934\"]:::payCard\n    Step6_1 --> Step6_1_1[\"\u626b\u987e\u5ba2\u4ed8\u6b3e\u7801\u5b8c\u6210\u6536\u6b3e\"]:::payCard\n\n    Step6 -->|6.2 \u73b0\u91d1| Step6_2[\"\u73b0\u91d1: \u586b\u5199\u652f\u4ed8\u91d1\u989d\"]:::payCard\n\n    Step6 -->|6.3 \u4f1a\u5458\u50a8\u503c\u5361| Step6_3[\"\u4f1a\u5458\u50a8\u503c\u5361: \u586b\u5199\u652f\u4ed8\u91d1\u989d\"]:::payCard\n    Step6_3 --> Step6_3_1[\"\u8f93\u5165\u652f\u4ed8\u5bc6\u7801\uff0c\u5b8c\u6210\u6536\u6b3e\"]:::payCard\n\n    %% \u6c47\u805a\u5230\u5b8c\u6210\u4e0e\u91cd\u7f6e\n    Step6_1_1 --> Step7([\"7. \u6536\u6b3e\u5b8c\u6210\uff0c\u91cd\u7f6e\u56de\u8d2d\u7269\u8f66\u9875\u9762\"]):::endPill\n    Step6_2 --> Step7\n    Step6_3_1 --> Step7\n```\n\n### 2.2 \u4e1a\u52a1\u64cd\u4f5c\u6d41\u8f6c\u8be6\u7ec6\u8bf4\u660e\n\n| \u6b65\u9aa4\u7f16\u53f7 | \u6d41\u7a0b\u6b65\u9aa4 | \u7ec6\u5206\u64cd\u4f5c\u4e0e\u4e1a\u52a1\u6d41\u8f6c\u8bf4\u660e | \u5bf9\u5e94\u64cd\u4f5c\u754c\u9762\u539f\u578b\u622a\u56fe |\n| :---: | :--- | :--- | :--- |\n| **1** | **\u8fdb\u5165\u5e97\u5185\u6536\u94f6** | \u6253\u5f00\u6536\u94f6\u5de5\u4f5c\u53f0\uff0c\u521d\u59cb\u8d2d\u7269\u8f66\u4e3a\u7a7a\u7f6e\u6001\uff080 \u4ef6\u3001\u00a50.0\uff09\uff0c\u53bb\u6536\u94f6\u6309\u94ae\u9ed8\u8ba4\u7981\u7528\uff0c\u4f1a\u5458\u5904\u4e8e\u672a\u7ed1\u5b9a\u72b6\u6001\u3002 | [\u56fe 3-1 \u521d\u59cb\u5de5\u4f5c\u53f0](#31-\u5de5\u4f5c\u53f0\u521d\u59cb\u6001\u4e0e\u573a\u666f\u5b9a\u4f4d\u5bf9\u5e94\u8282\u70b9-1) |\n| **2** | **\u5f55\u5165\u4f1a\u5458** | \u952e\u76d8\u8f93\u5165 11 \u4f4d\u4f1a\u5458\u624b\u673a\u53f7\uff0c\u7cfb\u7edf\u5b8c\u6210\u8eab\u4efd\u6821\u9a8c\u5e76\u5728\u5de6\u4e0a\u89d2\u5e38\u9a7b\u6e32\u67d3 `[\ud83d\udc64 \u624b\u673a\u53f7]` \u80f6\u56ca\u5fbd\u6807\u3002 | [\u56fe 3-2 \u4f1a\u5458\u5f55\u5165](#32-\u4f1a\u5458\u8eab\u4efd\u667a\u80fd\u8bc6\u522b\u4e0e\u80f6\u56ca\u4ea4\u4e92\u5bf9\u5e94\u8282\u70b9-2) |\n| **3** | **\u6dfb\u54c1\u65b9\u5f0f** | \u652f\u6301\u4ee5\u4e0b\u4e09\u79cd\u6838\u5fc3\u6dfb\u836f\u8def\u5f84\uff1a<br/>\u2022 **3.1 \u626b69\u7801\u6dfb\u52a0\u5546\u54c1** $\nightarrow$ **3.1.1 \u9009\u62e9\u6279\u53f7**\uff1a\u626b\u63cf\u6761\u7801\u5524\u8d77\u6279\u53f7\u534a\u7a97\uff0c\u52fe\u9009\u5728\u5e93\u6709\u6548\u6279\u6b21\u5165\u8f66\uff1b<br/>\u2022 **3.2 \u626b\u8ffd\u6eaf\u7801\u6dfb\u52a0\u5546\u54c1**\uff1a\u70b9\u51fb\u3010\u6a21\u62df\u626b\u8ffd\u6eaf\u7801\u3011\u4e00\u952e\u8bc6\u522b 20 \u4f4d\u56fd\u5bb6\u7801\uff0c\u79d2\u7ea7\u81ea\u52a8\u5173\u8054\u6279\u6b21\u5165\u8f66\uff1b<br/>\u2022 **3.3 \u63d0\u53d6\u5904\u65b9\u5355** $\nightarrow$ **3.3.1 \u91c7\u96c6\u8ffd\u6eaf\u7801**\uff1a\u70b9\u51fb\u60ac\u6d6e\u5904\u65b9\u5355\u63d0\u53d6\u5355\u636e\uff0c\u6309\u5904\u65b9\u836f\u54c1\u6570\u91cf 1:1 \u91c7\u9f50\u8ffd\u6eaf\u7801\u3002 | [\u56fe 3-3 \u626b\u7801\u9009\u6279](#33-\u836f\u54c1\u68c0\u7d22\u4e0e\u56fd\u5bb6\u8ffd\u6eaf\u7801\u4e00\u952e\u6838\u9a8c\u5bf9\u5e94\u8282\u70b9-31--32)<br/>[\u56fe 3-4 \u8ffd\u6eaf\u7801\u76f4\u901a](#33-\u836f\u54c1\u68c0\u7d22\u4e0e\u56fd\u5bb6\u8ffd\u6eaf\u7801\u4e00\u952e\u6838\u9a8c\u5bf9\u5e94\u8282\u70b9-31--32)<br/>[\u56fe 3-5 \u5904\u65b9\u91c7\u96c6](#34-\u7535\u5b50\u5904\u65b9\u5355\u667a\u80fd\u7ba1\u7406\u4e0e\u8ffd\u6eaf\u7801-11-\u9010\u76d2\u5408\u89c4\u91c7\u96c6\u5bf9\u5e94\u8282\u70b9-33) |\n| **4** | **\u53bb\u6536\u94f6** | \u5904\u65b9\u836f\u91c7\u9f50\u8ffd\u6eaf\u7801\u540e\u89e3\u9501\u7ed3\u7b97\u901a\u9053\uff0c\u70b9\u51fb\u5e95\u90e8\u3010\u53bb\u6536\u94f6\u3011\u8fdb\u5165\u6536\u94f6\u7ed3\u7b97\u9875\u9762\u3002 | [\u56fe 3-6 \u8d2d\u7269\u8f66\u53bb\u6536\u94f6](#35-\u8d2d\u7269\u8f66\u6d41\u8f6c\u4e0e\u53bb\u6536\u94f6\u5bf9\u5e94\u8282\u70b9-4) |\n| **5** | **\u9009\u62e9\u4fc3\u9500\u5957\u9910** | \u7ed3\u7b97\u9875\u9ed8\u8ba4\u81ea\u52a8\u52fe\u9009\u7b2c 1 \u9879\u6700\u4f18\u60e0\u5957\u9910\uff08\u7acb\u51cf \u00a530.0\uff09\uff0c\u652f\u6301\u5355\u9009\u5207\u6362\u6216\u53d6\u6d88\uff0c\u5e94\u4ed8\u603b\u989d\u5b9e\u65f6\u8054\u52a8\u62b5\u6263\u3002 | [\u56fe 3-7 \u4fc3\u9500\u5957\u9910\u9996\u9009](#36-\u4fc3\u9500\u5957\u9910\u81ea\u52a8\u5316\u9996\u9009\u673a\u5236\u5bf9\u5e94\u8282\u70b9-5) |\n| **6** | **\u9009\u62e9\u652f\u4ed8\u65b9\u5f0f** | \u63d0\u4f9b\u4e09\u79cd\u652f\u4ed8\u6e20\u9053\uff1a<br/>\u2022 **6.1 \u805a\u5408\u6536\u6b3e** $\nightarrow$ **6.1.1 \u626b\u987e\u5ba2\u4ed8\u6b3e\u7801\u5b8c\u6210\u6536\u6b3e**\uff1a\u5524\u8d77\u540e\u7f6e\u6444\u50cf\u5934\u53cd\u626b\u987e\u5ba2\u5fae\u4fe1/\u652f\u4ed8\u5b9d\u6761\u7801\uff1b<br/>\u2022 **6.2 \u73b0\u91d1**\uff1a\u8f93\u5165\u5b9e\u6536\u73b0\u91d1\u6570\u989d\uff0c\u7cfb\u7edf\u81ea\u52a8\u5927\u5b57\u63d0\u793a\u627e\u96f6\uff1b<br/>\u2022 **6.3 \u4f1a\u5458\u50a8\u503c\u5361** $\nightarrow$ **6.3.1 \u8f93\u5165\u652f\u4ed8\u5bc6\u7801\uff0c\u5b8c\u6210\u6536\u6b3e**\uff1a\u586b\u5199\u6263\u6b3e\u91d1\u989d\uff08\u81ea\u52a8\u586b\u5145\u53ef\u7528\u4e0a\u9650\uff09\uff0c\u8c03\u8d77 6 \u4f4d PIN \u7801\u952e\u76d8\u9274\u6743\u6263\u6b3e\u3002 | [\u56fe 3-8 \u805a\u5408\u53cd\u626b](#37-\u591a\u5143\u652f\u4ed8\u7ed3\u7b97\u4e0e\u53cd\u626b\u95ed\u73af\u5bf9\u5e94\u8282\u70b9-6)<br/>[\u56fe 3-9 \u73b0\u91d1\u627e\u96f6](#37-\u591a\u5143\u652f\u4ed8\u7ed3\u7b97\u4e0e\u53cd\u626b\u95ed\u73af\u5bf9\u5e94\u8282\u70b9-6)<br/>[\u56fe 3-10 \u50a8\u503c\u5361PIN\u7801](#37-\u591a\u5143\u652f\u4ed8\u7ed3\u7b97\u4e0e\u53cd\u626b\u95ed\u73af\u5bf9\u5e94\u8282\u70b9-6) |\n| **7** | **\u6536\u6b3e\u5b8c\u6210\uff0c\u91cd\u7f6e\u56de\u8d2d\u7269\u8f66\u9875\u9762** | \u6263\u6b3e\u6838\u9500\u6210\u529f\u5373\u523b\u751f\u6210 18 \u4f4d\u6536\u94f6\u6d41\u6c34\u53f7\uff0c\u7cfb\u7edf\u81ea\u52a8\u6e05\u7a7a\u8d2d\u7269\u8f66\u3001\u91cd\u7f6e\u5df2\u63d0\u5904\u65b9\u72b6\u6001\u5e76\u6062\u590d\u4fc3\u9500\u9996\u9879\u4f18\u9009\uff0c\u5e73\u6ed1\u5207\u56de\u8d2d\u7269\u8f66\u6536\u94f6\u7b2c\u4e00\u73b0\u573a\u3002 | [\u56fe 3-11 \u7ed3\u5355\u4e0e\u91cd\u7f6e](#38-\u4ea4\u6613\u5b8c\u6210\u4e0e\u4e0b\u4e00\u5355\u81ea\u52a8\u5316\u91cd\u7f6e\u5bf9\u5e94\u8282\u70b9-7) |\n\n---\n\n## 3. \u529f\u80fd\u89c4\u683c\u8be6\u8ff0\uff08\u9644\u5404\u8282\u70b9\u9ad8\u4fdd\u771f\u64cd\u4f5c\u754c\u9762\u539f\u578b\u622a\u56fe\uff09\n\n### 3.1 \u5de5\u4f5c\u53f0\u521d\u59cb\u6001\u4e0e\u573a\u666f\u5b9a\u4f4d\uff08\u5bf9\u5e94\u8282\u70b9 1\uff09\n- **\u573a\u666f\u6a21\u5f0f**\uff1a\u7cfb\u7edf\u8fd0\u884c\u6a21\u5f0f\u56fa\u5b9a\u4e3a\u201c\u6d3b\u529b\u5750\u6807\u201d\uff08Vitality Coordinates\uff09\u6807\u51c6\u79fb\u52a8\u6536\u94f6\u6a21\u5f0f\uff1b\n- **\u51b7\u542f\u52a8\u72b6\u6001**\uff1a\n  - \u8d2d\u7269\u8f66\u5546\u54c1\u4ef6\u6570\u521d\u59cb\u4e3a `0`\uff0c\u603b\u91d1\u989d\u663e\u793a\u4e3a `\u00a50.0`\uff1b\n  - \u5e95\u90e8\u3010\u53bb\u6536\u94f6\u3011\u6309\u94ae\u5448\u7981\u7528\u7070\u9636\u6001\uff08`disabled`\uff09\uff0c\u9632\u6b62\u4ea7\u751f\u7a7a\u5355\uff1b\n  - \u4f1a\u5458\u72b6\u6001\u4e3a\u201c\u672a\u7ed1\u5b9a\u201d\uff1b\n- **\u5168\u5c4f\u626b\u63cf\u89c6\u53e3**\uff1a\u4e3b\u5c4f\u5e55\u5448\u73b0 2.4s \u5faa\u73af\u6fc0\u5149\u626b\u63cf\u7ebf\u52a8\u6548\uff0c\u53f3\u4e0a\u89d2\u5e38\u9a7b\u624b\u7535\u7b52\u8865\u5149\u6309\u952e\u3002\n\n![\u56fe 3-1 \u8282\u70b9 1\uff1a\u8fdb\u5165\u5e97\u5185\u6536\u94f6\u5de5\u4f5c\u53f0\u521d\u59cb\u6001\u754c\u9762](\u8282\u70b91_\u8fdb\u5165\u5e97\u5185\u6536\u94f6.png)\n*\u56fe 3-1 \u8282\u70b9 1\uff1a\u8fdb\u5165\u5e97\u5185\u6536\u94f6\u5de5\u4f5c\u53f0\u521d\u59cb\u6001\u754c\u9762*\n\n---\n\n### 3.2 \u4f1a\u5458\u8eab\u4efd\u667a\u80fd\u8bc6\u522b\u4e0e\u80f6\u56ca\u4ea4\u4e92\uff08\u5bf9\u5e94\u8282\u70b9 2\uff09\n- **\u8f93\u5165\u8def\u7531\u63a7\u5236**\uff1a\n  - \u5e97\u5458\u5728\u6570\u5b57\u952e\u76d8\u8f93\u5165 11 \u4f4d\u624b\u673a\u53f7\u65f6\uff0c\u7cfb\u7edf\u5224\u5b9a\u4e3a\u5f55\u5165\u4f1a\u5458\uff1b\n  - \u5f55\u5165\u4f1a\u5458\u65f6\u4e13\u95e8\u5904\u7406\u4f1a\u5458\u8eab\u4efd\u9274\u6743\u4e0e\u72b6\u6001\u6fc0\u6d3b\uff0c\u4e0d\u89e6\u53d1\u5546\u54c1\u6279\u53f7\u5f39\u7a97\uff1b\n- **\u5de6\u4e0a\u89d2\u4f1a\u5458\u80f6\u56ca\u5fbd\u6807**\uff1a\n  - \u5f55\u5165\u6210\u529f\u540e\uff0c\u5728\u5c4f\u5e55\u5de6\u4e0a\u89d2\u5bfc\u822a\u8fd4\u56de\u952e\u53f3\u4fa7\u9ad8\u4eae\u5e38\u9a7b\u5c55\u793a `[\ud83d\udc64 18510178068]` \u80f6\u56ca\uff1b\n  - \u70b9\u51fb\u80f6\u56ca\u5fbd\u6807\u5524\u51fa\u64cd\u4f5c\u62bd\u5c49\uff1a\u5c55\u793a\u4f1a\u5458\u8131\u654f\u59d3\u540d\uff08\u5982 `\u8d75**`\uff09\u3001\u50a8\u503c\u5361\u53ef\u7528\u4f59\u989d\uff0c\u5e76\u63d0\u4f9b\u3010\u89e3\u7ed1\u5f53\u524d\u4f1a\u5458\u3011\u64cd\u4f5c\uff1b\n- **\u652f\u4ed8\u4fa7\u8054\u52a8**\uff1a\n  - \u5df2\u5f55\u5165\u4f1a\u5458\u65f6\uff0c\u7ed3\u7b97\u9875\u652f\u4ed8\u65b9\u5f0f\u7f51\u683c\u4e2d\u5448\u73b0\u3010\u4f1a\u5458\u50a8\u503c\u5361\u3011\u5361\u7247\uff1b\u672a\u5f55\u5165\u4f1a\u5458\u65f6\u4ec5\u652f\u6301\u805a\u5408\u6536\u6b3e\u548c\u73b0\u91d1\u3002\n\n![\u56fe 3-2 \u8282\u70b9 2\uff1a\u5f55\u5165\u4f1a\u5458\u8eab\u4efd\u9274\u6743\u4e0e\u4e5d\u5bab\u683c\u8f93\u5165](\u8282\u70b92_\u5f55\u5165\u4f1a\u5458.png)\n*\u56fe 3-2 \u8282\u70b9 2\uff1a\u5f55\u5165\u4f1a\u5458\u8eab\u4efd\u9274\u6743\u4e0e\u4e5d\u5bab\u683c\u8f93\u5165*\n\n---\n\n### 3.3 \u836f\u54c1\u68c0\u7d22\u4e0e\u56fd\u5bb6\u8ffd\u6eaf\u7801\u4e00\u952e\u6838\u9a8c\uff08\u5bf9\u5e94\u8282\u70b9 3.1 & 3.2\uff09\n- **\u666e\u901a\u6761\u7801\u6a21\u5f0f\uff08\u8282\u70b9 3.1\uff09**\uff1a\u626b\u5165 69 \u7801\u6216\u8d27\u53f7\u540e\uff0c\u5524\u8d77\u5e95\u90e8\u6279\u53f7\u9009\u62e9\u534a\u7a97\uff0c\u4f9b\u5e97\u5458\u6838\u5bf9\u5728\u5e93\u6709\u6548\u6279\u6b21\u3001\u6709\u6548\u671f\u3001\u5e93\u5b58\u4e0e\u96f6\u552e\u4ef7\u540e\uff0c\u901a\u8fc7 `+` `-` \u8c03\u8282\u6570\u91cf\u6dfb\u52a0\u5165\u8f66\uff1b\n\n![\u56fe 3-3 \u8282\u70b9 3.1\uff1a\u626b69\u7801\u6dfb\u54c1\u4e0e\u5728\u5e93\u6279\u53f7\u9009\u62e9\u6d41\u8f6c](\u8282\u70b93_1_\u626b69\u7801\u6dfb\u54c1\u4e0e\u6279\u53f7\u9009\u62e9.png)\n*\u56fe 3-3 \u8282\u70b9 3.1\uff1a\u626b69\u7801\u6dfb\u54c1\u4e0e\u5728\u5e93\u6279\u53f7\u9009\u62e9\u6d41\u8f6c*\n\n- **\u3010\ud83d\udcf8 \u6a21\u62df\u626b\u8ffd\u6eaf\u7801\u3011\u76f4\u901a\u6a21\u5f0f\uff08\u8282\u70b9 3.2\uff09**\uff1a\n  - \u6570\u5b57\u952e\u76d8\u9876\u90e8\u6302\u8f7d\u4e13\u5c5e\u6a59\u8272\u80f6\u56ca\u6309\u94ae\uff1b\n  - \u70b9\u51fb\u540e\u6a21\u62df\u626b\u63cf\u4ee5 `8430` \u5f00\u5934\u7684 20 \u4f4d\u56fd\u5bb6\u836f\u54c1\u4e00\u7269\u4e00\u7801\u8ffd\u6eaf\u7801\uff08\u5982 `84300298883275088608`\uff09\uff1b\n  - \u7cfb\u7edf\u5728\u7ebf\u9a8c\u771f\u540e\u76f4\u63a5\u7ed1\u5b9a\u5728\u5e93\u552f\u4e00\u6279\u6b21\u5e76\u6dfb\u52a0\u81f3\u8d2d\u7269\u8f66\uff0c\u5b9e\u73b0\u4e00\u6b65\u5230\u4f4d\u7684\u6781\u7b80\u64cd\u4f5c\uff0c\u514d\u53bb\u4eba\u5de5\u4e8c\u6b21\u9009\u6279\u3002\n\n![\u56fe 3-4 \u8282\u70b9 3.2\uff1a\u626b\u56fd\u5bb6\u836f\u54c1\u8ffd\u6eaf\u7801\u76f4\u901a\u5165\u8f66](\u8282\u70b93_2_\u626b\u8ffd\u6eaf\u7801\u6dfb\u54c1.png)\n*\u56fe 3-4 \u8282\u70b9 3.2\uff1a\u626b\u56fd\u5bb6\u836f\u54c1\u8ffd\u6eaf\u7801\u76f4\u901a\u5165\u8f66*\n\n---\n\n### 3.4 \u7535\u5b50\u5904\u65b9\u5355\u667a\u80fd\u7ba1\u7406\u4e0e\u8ffd\u6eaf\u7801 1:1 \u9010\u76d2\u5408\u89c4\u91c7\u96c6\uff08\u5bf9\u5e94\u8282\u70b9 3.3\uff09\n- **\u60ac\u6d6e\u5165\u53e3**\uff1a\u626b\u7801\u4e3b\u754c\u9762\u53f3\u4e0b\u89d2\u60ac\u6d6e\u84dd\u767d\u80f6\u56ca `[\ud83d\udc8a \u5904\u65b9\u5355]`\uff0c\u914d\u6709\u5f85\u63d0\u5355\u6570\u91cf\u89d2\u6807\uff1b\n- **\u5904\u65b9\u5361\u7247\u4fe1\u606f\u7ed3\u6784**\uff1a\n  1. **\u9996\u8981\u8bc6\u522b\u533a**\uff1a\u52a0\u7c97\u653e\u5927\u5c55\u793a\u3010\u987e\u5ba2\u59d3\u540d\u3011\uff08\u5982\u201c\u738b*\u660e\u201d\uff09\uff0c\u7d27\u968f\u3010\u6027\u522b\u00b7\u5e74\u9f84\u3011\u6d45\u84dd\u80f6\u56ca\uff08\u5982\u201c\u7537\u00b746\u5c81\u201d\uff09\uff0c\u53f3\u4fa7\u5c55\u793a\u8131\u654f\u8054\u7cfb\u7535\u8bdd\uff1b\n  2. **\u8bca\u65ad\u6838\u5fc3\u533a**\uff1a\u72ec\u5360\u901a\u680f\u6d45\u84dd\u9ad8\u4eae\u5e95\u6846\u5c55\u793a\u3010\u5904\u65b9\u8bca\u65ad\u3011\uff08\u5982\u201c\u6025\u6027\u652f\u6c14\u7ba1\u708e\u4f34\u652f\u539f\u4f53\u611f\u67d3\u201d\uff09\uff0c\u4fbf\u4e8e\u836f\u5e08\u5feb\u901f\u5ba1\u65b9\u6838\u5bf9\uff1b\n  3. **\u6b21\u8981\u5f52\u6863\u533a**\uff1a\u5904\u65b9\u5355\u53f7\u4e0e\u5c31\u8bca\u79d1\u5ba4\u4f4d\u4e8e\u5361\u7247\u5e95\u90e8\u6d45\u7070\u8272\u5fae\u7f29\u5448\u73b0\uff1b\n- **\u591a\u5904\u65b9\u5355\u7d2f\u52a0\u63d0\u5355**\uff1a\n  - \u652f\u6301\u6536\u94f6\u5458\u8fde\u7eed\u63d0\u53d6\u591a\u5f20\u5904\u65b9\u5355\uff0c\u6240\u6709\u5904\u65b9\u836f\u54c1\u5408\u5e76\u7d2f\u52a0\u8fdb\u8d2d\u7269\u8f66\u8fdb\u884c\u5408\u5e76\u7ed3\u7b97\uff1b\n- **1:1 \u9010\u76d2\u5f3a\u91c7\u96c6\u4e0e\u95ed\u73af\u62e6\u622a**\uff1a\n  - \u63d0\u53d6\u5904\u65b9\u5355\u540e\u81ea\u52a8\u89e6\u53d1\u3010\u5904\u65b9\u836f\u54c1\u8ffd\u6eaf\u7801\u91c7\u96c6\u3011\u534a\u7a97\uff1b\n  - \u5904\u65b9\u5305\u542b\u51e0\u76d2\u836f\uff0c\u5fc5\u987b\u901a\u8fc7\u3010\ud83d\udcf8 \u626b\u63cf\u4e00\u76d2\u8ffd\u6eaf\u7801\u3011\u9010\u76d2\u626b\u9f50 20 \u4f4d\u7801\uff08\u5982 `2/2 \u76d2`\uff09\uff1b\n  - **\u5408\u89c4\u62e6\u622a\u673a\u5236**\uff1a\u82e5\u672a\u91c7\u9f50\uff0c\u5e95\u90e8\u4e3b\u6536\u94f6\u6309\u94ae\u663e\u793a\u6a59\u8272\u8b66\u793a\u6001 `\u5f85\u91c7\u8ffd\u6eaf\u7801 (X/Y)`\uff0c\u70b9\u51fb\u5f3a\u5236\u5f39\u51fa\u91c7\u96c6\u7a97\uff0c\u9501\u5b9a\u7ed3\u7b97\u901a\u9053\u76f4\u81f3\u5168\u6570\u91c7\u9f50\u3002\n\n![\u56fe 3-5 \u8282\u70b9 3.3\uff1a\u63d0\u53d6\u5904\u65b9\u5355\u4e0e\u8ffd\u6eaf\u7801 1:1 \u9010\u76d2\u5f3a\u5408\u89c4\u91c7\u96c6\u6d41\u8f6c](\u8282\u70b93_3_\u63d0\u53d6\u5904\u65b9\u5355\u4e0e\u8ffd\u6eaf\u7801\u91c7\u96c6.png)\n*\u56fe 3-5 \u8282\u70b9 3.3\uff1a\u63d0\u53d6\u5904\u65b9\u5355\u4e0e\u8ffd\u6eaf\u7801 1:1 \u9010\u76d2\u5f3a\u5408\u89c4\u91c7\u96c6\u6d41\u8f6c*\n\n---\n\n### 3.5 \u8d2d\u7269\u8f66\u6d41\u8f6c\u4e0e\u53bb\u6536\u94f6\uff08\u5bf9\u5e94\u8282\u70b9 4\uff09\n- \u63d0\u4f9b\u5e95\u90e8\u8d2d\u7269\u8f66\u534a\u7a97\uff0c\u652f\u6301\u67e5\u770b\u836f\u54c1\u7f29\u7565\u56fe\u3001\u54c1\u540d\u3001\u5728\u5e93\u6279\u53f7\u3001\u8ffd\u6eaf\u7801\u6458\u8981\u53ca\u5904\u65b9\u836f\u7eff/\u6a59\u8272\u5408\u89c4\u72b6\u6001\u5fbd\u7ae0\uff1b\n- \u652f\u6301 `+` / `-` \u6b65\u8fdb\u5668\u5b9e\u65f6\u589e\u51cf\u53ca\u4e00\u952e\u6e05\u7a7a\u8d2d\u7269\u8f66\uff1b\n- **\u901a\u9053\u89e3\u9501**\uff1a\u5904\u65b9\u836f\u5168\u90e8\u91c7\u9f50\u8ffd\u6eaf\u7801\u540e\uff0c\u5e95\u90e8\u3010\u53bb\u6536\u94f6 \u00a5xx.x\u3011\u89e3\u9664\u7981\u7528\u6001\uff0c\u70b9\u51fb\u5e73\u6ed1\u8fdb\u5165\u7ed3\u7b97\u6536\u94f6\u53f0\u3002\n\n![\u56fe 3-6 \u8282\u70b9 4\uff1a\u8d2d\u7269\u8f66\u660e\u7ec6\u6838\u9a8c\u4e0e\u89e3\u9501\u53bb\u6536\u94f6](\u8282\u70b94_\u53bb\u6536\u94f6.png)\n*\u56fe 3-6 \u8282\u70b9 4\uff1a\u8d2d\u7269\u8f66\u660e\u7ec6\u6838\u9a8c\u4e0e\u89e3\u9501\u53bb\u6536\u94f6*\n\n---\n\n### 3.6 \u4fc3\u9500\u5957\u9910\u81ea\u52a8\u5316\u9996\u9009\u673a\u5236\uff08\u5bf9\u5e94\u8282\u70b9 5\uff09\n- **\u754c\u9762\u4f4d\u7f6e**\uff1a\u7ed3\u7b97\u9875\u3010\u4fc3\u9500\u5957\u9910 (\u5355\u9009)\u3011\u5361\u7247\u7ec4\uff1b\n- **\u9ed8\u8ba4\u52fe\u9009\u7b56\u7565**\uff1a\n  - \u9875\u9762\u521d\u6b21\u8f7d\u5165\u53ca\u5f00\u542f\u65b0\u5355\u65f6\uff0c\u7cfb\u7edf\u9ed8\u8ba4\u4e14\u81ea\u52a8\u52fe\u9009\u7b2c 1 \u9879\u6700\u4f18\u60e0\u5957\u9910\uff08\u201c\u5f00\u4e1a\u76db\u5178\u5168\u80fd\u5927\u793c\u5305 A \u7acb\u51cf \u00a530.0\u201d\uff09\uff1b\n  - \u754c\u9762\u5355\u9009\u5706\u5708\u9ad8\u4eae\u5c55\u793a\u5bf9\u52fe\u72b6\u6001\uff0c\u9876\u90e8\u5f85\u6536\u603b\u989d\u4e0e\u53cd\u626b\u91d1\u989d\u52a8\u6001\u6263\u51cf \u00a530.0\uff1b\n- **\u4ea4\u4e92\u63a7\u5236**\uff1a\u652f\u6301\u5355\u9009\u5207\u6362\u5176\u4ed6\u5957\u9910\uff0c\u6216\u518d\u6b21\u70b9\u51fb\u5df2\u9009\u9879\u53d6\u6d88\u4f18\u60e0\u3002\n\n![\u56fe 3-7 \u8282\u70b9 5\uff1a\u9009\u62e9\u4fc3\u9500\u5957\u9910\u4e0e\u91d1\u989d\u52a8\u6001\u62b5\u6263](\u8282\u70b95_\u9009\u62e9\u4fc3\u9500\u5957\u9910.png)\n*\u56fe 3-7 \u8282\u70b9 5\uff1a\u9009\u62e9\u4fc3\u9500\u5957\u9910\u4e0e\u91d1\u989d\u52a8\u6001\u62b5\u6263*\n\n---\n\n### 3.7 \u591a\u5143\u652f\u4ed8\u7ed3\u7b97\u4e0e\u53cd\u626b\u95ed\u73af\uff08\u5bf9\u5e94\u8282\u70b9 6\uff09\n- **\u805a\u5408\u6536\u6b3e\uff08\u53cd\u626b\u987e\u5ba2\u7801\uff0c\u8282\u70b9 6.1\uff09**\uff1a\n  - \u70b9\u51fb\u3010\u786e\u8ba4\u6536\u6b3e \u00a5xx.x\u3011\u540e\uff0c\u7acb\u5373\u5524\u8d77\u5168\u5c4f\u540e\u7f6e\u6444\u50cf\u5934\u626b\u63cf\u9875\u9762\uff1b\n  - \u5c4f\u5e55\u5448\u73b0\u52a8\u6001\u6fc0\u5149\u626b\u7801\u6846\u4e0e\u201c\u8bf7\u5bf9\u51c6\u987e\u5ba2\u4ed8\u6b3e\u6761\u7801\u6216\u4e8c\u7ef4\u7801\u201d\uff0c\u53cd\u626b\u6210\u529f\u540e\u5373\u523b\u6838\u9500\u51fa\u7968\uff1b\n\n![\u56fe 3-8 \u8282\u70b9 6.1\uff1a\u805a\u5408\u6536\u6b3e\u4e0e\u53cd\u626b\u987e\u5ba2\u4ed8\u6b3e\u7801\u6d41\u8f6c](\u8282\u70b96_1_\u805a\u5408\u6536\u6b3e\u4e0e\u53cd\u626b.png)\n*\u56fe 3-8 \u8282\u70b9 6.1\uff1a\u805a\u5408\u6536\u6b3e\u4e0e\u53cd\u626b\u987e\u5ba2\u4ed8\u6b3e\u7801\u6d41\u8f6c*\n\n- **\u73b0\u91d1\u652f\u4ed8\uff08\u8282\u70b9 6.2\uff09**\uff1a\n  - \u5207\u6362\u81f3\u73b0\u91d1\u6536\u6b3e\u65b9\u5f0f\uff0c\u5f39\u51fa\u5b9e\u6536\u73b0\u91d1\u91d1\u989d\u8f93\u5165\u6846\uff1b\n  - \u5b9e\u65f6\u6839\u636e\u5b9e\u6536\u91d1\u989d\u4e0e\u5e94\u6536\u91d1\u989d\u8ba1\u7b97\u627e\u96f6\uff0c\u4ee5\u9192\u76ee\u5927\u5b57\u5c55\u793a\u627e\u96f6\u91d1\u989d\uff08\u5982\u201c\u627e\u96f6 \u00a57.1\u201d\uff09\uff0c\u5b9e\u6536\u4e0d\u8db3\u65f6\u963b\u65ad\u7ed3\u5355\uff1b\n\n![\u56fe 3-9 \u8282\u70b9 6.2\uff1a\u73b0\u91d1\u6536\u6b3e\u5b9e\u6536\u8f93\u5165\u4e0e\u627e\u96f6\u8ba1\u7b97](\u8282\u70b96_2_\u73b0\u91d1\u6536\u6b3e\u4e0e\u627e\u96f6.png)\n*\u56fe 3-9 \u8282\u70b9 6.2\uff1a\u73b0\u91d1\u6536\u6b3e\u5b9e\u6536\u8f93\u5165\u4e0e\u627e\u96f6\u8ba1\u7b97*\n\n- **\u4f1a\u5458\u50a8\u503c\u5361\u652f\u4ed8\uff08\u8282\u70b9 6.3\uff09**\uff1a\n  - \u9762\u677f\u6e05\u6670\u5448\u73b0\u4e09\u9879\u6838\u5fc3\u4fe1\u606f\uff1a**\u4f1a\u5458\u8131\u654f\u59d3\u540d**\uff08`\u8d75**`\uff09\u3001**\u50a8\u503c\u5361\u53ef\u7528\u4f59\u989d**\uff08`\u00a5150.00`\uff09\u3001**\u6263\u6b3e\u91d1\u989d\u8f93\u5165\u6846**\uff1b\n  - \u6263\u6b3e\u91d1\u989d\u9ed8\u8ba4\u81ea\u9002\u5e94\u8bbe\u4e3a\uff1a$\\min(\text{\u5f53\u524d\u5e94\u4ed8\u603b\u989d}, \text{\u50a8\u503c\u5361\u5269\u4f59\u989d\u5ea6})$\uff1b\n  - \u8f93\u5165\u8d85\u989d\u65f6\u81ea\u52a8\u7ea0\u504f\u5e76\u63d0\u793a\uff1b\u70b9\u51fb\u6263\u6b3e\u8c03\u8d77 6 \u4f4d\u6570\u5b57\u652f\u4ed8\u5bc6\u7801\u952e\u76d8\u8fdb\u884c\u5b89\u5168\u9274\u6743\uff1b\n\n![\u56fe 3-10 \u8282\u70b9 6.3\uff1a\u4f1a\u5458\u50a8\u503c\u5361\u6263\u6b3e\u4e0e 6 \u4f4d\u5bc6\u7801\u9274\u6743](\u8282\u70b96_3_\u4f1a\u5458\u50a8\u503c\u5361\u652f\u4ed8.png)\n*\u56fe 3-10 \u8282\u70b9 6.3\uff1a\u4f1a\u5458\u50a8\u503c\u5361\u6263\u6b3e\u4e0e 6 \u4f4d\u5bc6\u7801\u9274\u6743*\n\n---\n\n### 3.8 \u4ea4\u6613\u5b8c\u6210\u4e0e\u4e0b\u4e00\u5355\u81ea\u52a8\u5316\u91cd\u7f6e\uff08\u5bf9\u5e94\u8282\u70b9 7\uff09\n- \u4ea4\u6613\u6210\u529f\u5f39\u51fa\u51ed\u636e\u9875\uff0c\u751f\u6210\u552f\u4e00\u7684 18 \u4f4d\u6536\u94f6\u6d41\u6c34\u5355\u53f7\uff08`898...`\uff09\uff1b\n- \u70b9\u51fb\u3010\u5f00\u542f\u4e0b\u4e00\u5355\u3011\u6216\u3010\u7ee7\u7eed\u6536\u6b3e\u3011\u4e3b\u6309\u94ae\u540e\uff0c\u7cfb\u7edf\u91cd\u7f6e\u8d2d\u7269\u8f66\u6570\u636e\u3001\u6e05\u9664\u5df2\u63d0\u5904\u65b9\u72b6\u6001\uff0c\u5e76\u81ea\u52a8\u6062\u590d\u4fc3\u9500\u5957\u9910\u9ed8\u8ba4\u52fe\u9009\u7b2c\u4e00\u9879\uff0c\u5e73\u6ed1\u5207\u56de\u626b\u7801\u6536\u94f6\u7b2c\u4e00\u73b0\u573a\u3002\n\n![\u56fe 3-11 \u8282\u70b9 7\uff1a\u6536\u6b3e\u5b8c\u6210\u51ed\u636e\u4e0e\u4e00\u952e\u91cd\u7f6e\u8fd4\u56de\u8d2d\u7269\u8f66](\u8282\u70b97_\u6536\u6b3e\u5b8c\u6210\u4e0e\u91cd\u7f6e.png)\n*\u56fe 3-11 \u8282\u70b9 7\uff1a\u6536\u6b3e\u5b8c\u6210\u51ed\u636e\u4e0e\u4e00\u952e\u91cd\u7f6e\u8fd4\u56de\u8d2d\u7269\u8f66*\n\n---\n\n## 4. \u4e1a\u52a1\u5f02\u5e38\u77e9\u9635\u4e0e\u9632\u5fa1\u7b56\u7565\n\n| \u5f02\u5e38\u60c5\u666f / \u8fb9\u754c\u7528\u4f8b | \u7cfb\u7edf\u62e6\u622a\u673a\u5236 | \u524d\u7aef\u7528\u6237\u611f\u77e5\u8868\u73b0 |\n| :--- | :--- | :--- |\n| **\u5904\u65b9\u836f\u8ffd\u6eaf\u7801\u672a\u91c7\u9f50** | \u7269\u7406\u7981\u7528\u7ed3\u7b97\u901a\u9053\uff0c\u62e6\u622a\u652f\u4ed8\u8bf7\u6c42\u3002 | \u5e95\u90e8\u4e3b\u6309\u94ae\u9ad8\u4eae\u6a59\u8272\u3010\u5f85\u91c7\u8ffd\u6eaf\u7801 (X/Y)\u3011\uff1b\u70b9\u51fb\u5f39\u7a97\u5f15\u5bfc\u4e00\u952e\u8865\u91c7\u3002 |\n| **\u50a8\u503c\u5361\u4f59\u989d\u5c0f\u4e8e\u5f85\u6536\u989d** | \u622a\u65ad\u6700\u9ad8\u53ef\u7528\u91d1\u989d\uff1aMin(\u5f85\u4ed8\u989d, \u4f59\u989d)\u3002 | \u81ea\u52a8\u9884\u586b\u4f59\u989d\u4e0a\u9650\u5e76 Toast \u63d0\u793a\u201c\u6263\u6b3e\u989d\u5df2\u81ea\u52a8\u8bbe\u4e3a\u6700\u5927\u53ef\u7528\u4f59\u989d\u201d\u3002 |\n| **\u73b0\u91d1\u5b9e\u6536\u91d1\u989d\u4e0d\u8db3** | \u5224\u5b9a\u3010\u5b9e\u6536\u91d1\u989d < \u5e94\u4ed8\u603b\u989d\u3011\u5f3a\u963b\u65ad\u3002 | \u6309\u94ae\u62e6\u622a\uff0c\u5f39\u51fa\u7ea2\u5e95 Toast\uff1a\u201c\u5b9e\u6536\u91d1\u989d\u4e0d\u8db3\uff0c\u8bf7\u6838\u5bf9\u540e\u518d\u7ed3\u7b97\u201d\u3002 |\n| **\u672a\u5f55\u5165\u4f1a\u5458\u9009\u50a8\u503c\u5361** | \u652f\u4ed8\u65b9\u5f0f\u7f51\u683c\u4e0d\u4e88\u6e32\u67d3\u3010\u4f1a\u5458\u50a8\u503c\u5361\u3011\u3002 | \u4f1a\u5458\u5361\u7247\u65e0\u611f\u9690\u85cf\uff0c\u6536\u94f6\u5458\u53ea\u80fd\u9009\u805a\u5408\u6536\u6b3e\u6216\u73b0\u91d1\u3002 |\n| **\u5df2\u63d0\u5355\u5904\u65b9\u91cd\u590d\u63d0\u53d6** | \u5904\u65b9\u5217\u8868\u670d\u52a1\u7aef\u4ec5\u8fd4\u56de PENDING \u5355\u636e\u3002 | \u5217\u8868\u4e2d\u4e0d\u53ef\u89c1\u5df2\u63d0\u53d6\u5355\u636e\uff0c\u9632\u6b62\u540c\u4e00\u5f20\u5904\u65b9\u6d41\u51fa\u4e24\u6279\u5b9e\u7269\u836f\u3002 |\n| **\u7a7a\u8d2d\u7269\u8f66\u8bef\u89e6\u6536\u6b3e** | \u5e95\u90e8\u6536\u94f6\u6309\u94ae\u5f3a\u5236\u8bbe\u7f6e disabled \u5c5e\u6027\u3002 | \u6309\u94ae\u7f6e\u7070\u4e0d\u53ef\u70b9\u51fb\uff0c\u907f\u514d\u751f\u6210 0 \u5143\u810f\u6570\u636e\u6d41\u6c34\u3002 |\n";
+    const STORAGE_KEY = "VITALITY_POS_PRD_MD_V1";
+    const editor = document.getElementById("mdEditor");
+    const preview = document.getElementById("previewContent");
+    const charCount = document.getElementById("charCountText");
+    const saveStatus = document.getElementById("saveStatusIndicator");
+
+    function init() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      editor.value = saved || DEFAULT_MD;
+      renderPreview();
+    }
+
+    function onEditorInput() {
+      localStorage.setItem(STORAGE_KEY, editor.value);
+      saveStatus.textContent = "● 已实时保存至浏览器缓存";
+      saveStatus.style.color = "#52c41a";
+      renderPreview();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function renderMarkdown(md) {
+      // 提取代码块
+      const codeBlocks = [];
+      let text = md.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, function(match, lang, code) {
+        const id = "CODEBLOCK_" + codeBlocks.length + "_PLACEHOLDER";
+        codeBlocks.push('<pre><code class="language-' + lang + '">' + escapeHtml(code.trim()) + '</code></pre>');
+        return id;
+      });
+
+      // 转义普通文本
+      text = escapeHtml(text);
+
+      // 行内代码
+      text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+      // 标题
+      text = text.replace(/^### (.*$)/gim, "<h3>$1</h3>");
+      text = text.replace(/^## (.*$)/gim, "<h2>$1</h2>");
+      text = text.replace(/^# (.*$)/gim, "<h1>$1</h1>");
+
+      // 粗体和斜体
+      text = text.replace(/\*\*([^\*]+)\*\*/g, "<strong>$1</strong>");
+      text = text.replace(/\*([^\*]+)\*/g, "<em>$1</em>");
+
+      // 引用
+      text = text.replace(/^\> (.*$)/gim, "<blockquote>$1</blockquote>");
+
+      // 列表
+      text = text.replace(/^\- (.*$)/gim, "<li>$1</li>");
+      text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+
+      // 表格简易渲染
+      const lines = text.split("\n");
+      let inTable = false;
+      let tableHtml = "";
+      let newLines = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith("|") && line.endsWith("|")) {
+          if (!inTable) {
+            inTable = true;
+            tableHtml = "<table>";
+          }
+          const cells = line.split("|").slice(1, -1).map(c => c.trim());
+          if (cells.every(c => c.match(/^:?-+:?$/))) {
+            continue;
+          }
+          const isHeader = !tableHtml.includes("<tr>");
+          const tag = isHeader ? "th" : "td";
+          tableHtml += "<tr>" + cells.map(c => "<" + tag + ">" + c + "</" + tag + ">").join("") + "</tr>";
+        } else {
+          if (inTable) {
+            tableHtml += "</table>";
+            newLines.push(tableHtml);
+            inTable = false;
+          }
+          newLines.push(lines[i]);
+        }
+      }
+      if (inTable) {
+        tableHtml += "</table>";
+        newLines.push(tableHtml);
+      }
+      text = newLines.join("\n");
+
+      // 段落换行
+      text = text.replace(/\n\n+/g, "</p><p>");
+      let res = "<p>" + text + "</p>";
+
+      // 还原代码块
+      codeBlocks.forEach(function(block, idx) {
+        res = res.replace("CODEBLOCK_" + idx + "_PLACEHOLDER", block);
+      });
+
+      return res;
+    }
+
+    function renderPreview() {
+      charCount.textContent = editor.value.length + " 字符";
+      preview.innerHTML = renderMarkdown(editor.value);
+    }
+
+    function setViewMode(mode) {
+      const editorPane = document.getElementById("editorPane");
+      const previewPane = document.getElementById("previewPane");
+      document.querySelectorAll(".view-toggle-btn").forEach(b => b.classList.remove("active"));
+
+      if (mode === "split") {
+        editorPane.style.display = "flex";
+        previewPane.style.display = "flex";
+        editorPane.style.flex = "1";
+        previewPane.style.flex = "1";
+        document.getElementById("btnSplit").classList.add("active");
+      } else if (mode === "edit") {
+        editorPane.style.display = "flex";
+        previewPane.style.display = "none";
+        editorPane.style.flex = "1";
+        document.getElementById("btnEdit").classList.add("active");
+      } else if (mode === "preview") {
+        editorPane.style.display = "none";
+        previewPane.style.display = "flex";
+        previewPane.style.flex = "1";
+        document.getElementById("btnPreview").classList.add("active");
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2000);
+    }
+
+    function copyMarkdown() {
+      navigator.clipboard.writeText(editor.value).then(() => {
+        showToast("已成功复制全部 Markdown 文本！");
+      });
+    }
+
+    function downloadMarkdown() {
+      const blob = new Blob([editor.value], { type: "text/markdown;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "店内收银产品需求文档_PRD.md";
+      a.click();
+      showToast("已触发保存最新【店内收银产品需求文档_PRD.md】！");
+    }
+
+    function openWordPrompt() {
+      alert("Word 格式文档已在本地生成！文件名为：\n【店内收银产品需求文档_PRD.docx】\n\n可直接双击使用 Microsoft Word 或 WPS Office 打开自由编辑。");
+    }
+
+    function resetInitial() {
+      if (confirm("确定要将文档重置为系统初始标准 PRD 吗？")) {
+        editor.value = DEFAULT_MD;
+        localStorage.removeItem(STORAGE_KEY);
+        renderPreview();
+        showToast("已重置为初始标准 PRD！");
+      }
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        localStorage.setItem(STORAGE_KEY, editor.value);
+        showToast("已快捷保存至本地缓存！点击【保存下载 MD】可另存文件");
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

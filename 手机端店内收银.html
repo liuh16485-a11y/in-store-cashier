@@ -1,0 +1,3119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>活力坐标 - 手机端店内收银系统</title>
+  <style>
+    :root {
+      --primary: #009fe8;
+      --primary-dark: #0070c0;
+      --primary-light: #e6f6fe;
+      --danger: #ff3b30;
+      --success: #34c759;
+      --warning: #fa8c16;
+      --text-main: #1f2329;
+      --text-sub: #8f959e;
+      --text-hint: #bbbfc4;
+      --border: #ebedf0;
+      --bg: #f5f6f8;
+      --card-bg: #ffffff;
+      --safe-top: 44px;
+      --safe-bottom: 34px;
+    }
+
+    /* 彻底隐藏所有原生滚动条（保持触控与鼠标滚轮滑动能力，杜绝桌面端灰色滚动条） */
+    ::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background-color: #2c3440;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 10px;
+    }
+
+    /* 顶部场景快速切换工具栏 (演示/测试用) */
+    .view-toolbar {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 4px 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 9999;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .toolbar-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #fff;
+      padding: 4px 9px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 11.5px;
+      transition: all 0.2s;
+    }
+
+    .toolbar-btn.active, .toolbar-btn:hover {
+      background: var(--primary);
+    }
+
+    /* 手机外壳容器 */
+    .mobile-wrapper {
+      width: 390px;
+      height: 844px;
+      background: #000;
+      border-radius: 46px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 8px #1c1c1e, 0 0 0 10px #3a3a3c;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* iPhone 灵动岛与状态栏 */
+    .status-bar {
+      height: 44px;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 26px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #000;
+      pointer-events: none;
+    }
+
+    .status-bar.dark {
+      color: #fff;
+    }
+
+    .island {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 32px;
+      background: #000;
+      border-radius: 18px;
+      z-index: 1001;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+    }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: #000;
+      border-radius: 3px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .home-indicator.light {
+      background: #fff;
+    }
+
+    /* 页面视口 */
+    .app-screen {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    /* 通用导航条 Header */
+    .nav-bar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .nav-back {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      color: #333;
+    }
+
+    .nav-title-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .nav-main-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #111;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-sub-title {
+      font-size: 11px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-top: -1px;
+    }
+
+    /* ================= 页面 1：首页（店内收银） ================= */
+    .home-content {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .order-center-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #111;
+      margin-bottom: 14px;
+    }
+
+    .order-status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .order-status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .status-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 22px;
+      background: #f7f8fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      position: relative;
+    }
+
+    .badge-count {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 10px;
+      border: 1.5px solid #fff;
+    }
+
+    .status-label {
+      font-size: 12px;
+      color: #4e5969;
+    }
+
+    .scene-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .scene-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+      transition: transform 0.1s, background-color 0.15s;
+    }
+
+    .scene-card:active {
+      background-color: #f8fafc;
+      transform: scale(0.99);
+    }
+
+    .scene-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .scene-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .icon-normal { background: #e8f9f0; color: #00ba60; }
+    .icon-night { background: #f0eafc; color: #722ed1; }
+    .icon-stall { background: #e6f6fe; color: #009fe8; }
+    .icon-enterprise { background: #feecef; color: #f53f3f; }
+
+    .scene-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .scene-arrow {
+      color: #c9cdd4;
+      font-size: 16px;
+    }
+
+    /* ================= 页面 2：商品扫码收银界面 ================= */
+    .scan-page {
+      background: #000;
+      color: #fff;
+      padding-top: 0;
+      padding-bottom: 0;
+      position: relative;
+    }
+
+    .camera-viewport {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80') center/cover no-repeat;
+      filter: brightness(0.65) contrast(1.1);
+      overflow: hidden;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.85) 100%);
+    }
+
+    .scan-laser {
+      position: absolute;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #00d2ff, #fff, #00d2ff, transparent);
+      box-shadow: 0 0 12px #00d2ff, 0 0 4px #fff;
+      animation: scanAnim 2.4s ease-in-out infinite;
+    }
+
+    @keyframes scanAnim {
+      0% { top: 24%; opacity: 0.2; }
+      50% { top: 62%; opacity: 1; }
+      100% { top: 24%; opacity: 0.2; }
+    }
+
+    /* 扫码页顶栏：清爽对齐，仅保留关闭、会员胶囊与订单模式 */
+    .scan-topbar {
+      position: absolute;
+      top: 48px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 20;
+    }
+
+    .scan-top-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-circle-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    /* 会员手机号展示胶囊 (默认空置不展示) */
+    .member-phone-badge {
+      height: 30px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 15px;
+      padding: 0 10px;
+      display: none; /* 初始空置 */
+      align-items: center;
+      gap: 5px;
+      font-size: 12.5px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .member-phone-badge.show {
+      display: inline-flex;
+    }
+
+    .member-phone-badge .clear-member {
+      font-size: 11px;
+      color: #bbb;
+      margin-left: 2px;
+    }
+
+    .scan-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scan-pill-btn {
+      height: 30px;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 15px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* 优化 2：处方单悬浮按钮（移出顶部，改到右下方悬浮药丸样式，美观大气） */
+    .floating-rx-btn {
+      position: absolute;
+      right: 16px;
+      bottom: 120px;
+      background: linear-gradient(135deg, #009fe8, #0070c0);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(0, 159, 232, 0.45);
+      cursor: pointer;
+      z-index: 50;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.15s;
+    }
+
+    .floating-rx-btn:active {
+      transform: scale(0.96);
+    }
+
+    .rx-badge-num {
+      background: #ff3b30;
+      color: #fff;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    .scene-dropdown {
+      position: absolute;
+      top: 86px;
+      right: 76px;
+      width: 105px;
+      background: rgba(30, 30, 30, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+      z-index: 50;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .scene-dropdown.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      padding: 9px 12px;
+      font-size: 13px;
+      color: #e5e5e5;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .dropdown-item:active, .dropdown-item.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* 扫描框准心 */
+    .scan-aim-box {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 240px;
+      height: 180px;
+      border: 1.5px dashed rgba(255, 255, 255, 0.45);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .scan-tip-toast {
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: #fff;
+    }
+
+    /* 息屏省电模式 */
+    .screen-sleep-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 80;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .screen-sleep-mask.show {
+      display: flex;
+    }
+
+    .sleep-hint {
+      font-size: 16px;
+      color: #fff;
+      letter-spacing: 1px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .torch-box {
+      position: absolute;
+      bottom: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .torch-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* 扫码底部操作栏 */
+    .scan-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(12, 12, 14, 0.94);
+      backdrop-filter: blur(16px);
+      padding: 10px 14px 28px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 30;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .scan-input-row {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      height: 38px;
+      padding: 0 10px 0 14px;
+      gap: 8px;
+    }
+
+    .scan-input-placeholder {
+      flex: 1;
+      font-size: 13px;
+      color: #a0a0a5;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-quick-add {
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scan-checkout-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cart-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .cart-badge-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 20px;
+      background: #1e1e24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      position: relative;
+    }
+
+    .cart-price-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cart-price {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ff3b30;
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+    }
+
+    .cart-tag {
+      font-size: 10.5px;
+      color: #8e8e93;
+    }
+
+    .btn-checkout-primary {
+      background: var(--primary);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      height: 40px;
+      padding: 0 24px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-checkout-primary:disabled {
+      background: #3a3a3c;
+      color: #8e8e93;
+      cursor: not-allowed;
+    }
+
+    /* ================= 数字九宫格键盘抽屉 ================= */
+    .keypad-drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.25);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      padding-bottom: 24px;
+    }
+
+    .keypad-drawer.show {
+      display: flex;
+    }
+
+    .keypad-header {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .quick-tag-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .quick-tag-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-tag {
+      background: #2b2b2b;
+      color: #fff;
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .quick-tag.active {
+      background: var(--primary);
+    }
+
+    .quick-tag.tag-trace {
+      background: linear-gradient(135deg, #fa8c16, #fa541c);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(250, 140, 22, 0.35);
+    }
+
+    .keypad-input-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px;
+    }
+
+    .keypad-val-display {
+      font-size: 20px;
+      font-weight: bold;
+      color: #111;
+      min-height: 28px;
+      letter-spacing: 1px;
+    }
+
+    .btn-keypad-add {
+      width: 32px;
+      height: 32px;
+      border-radius: 16px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: #e5e5e5;
+    }
+
+    .key-btn {
+      height: 52px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 500;
+      color: #111;
+      cursor: pointer;
+    }
+
+    .key-btn:active {
+      background: #f2f2f7;
+    }
+
+    .key-sub {
+      font-size: 9px;
+      color: #8e8e93;
+      margin-top: -2px;
+    }
+
+    /* ================= 半屏通用抽屉 Modal ================= */
+    .modal-drawer-mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 120;
+      display: none;
+      align-items: flex-end;
+    }
+
+    .modal-drawer-mask.show {
+      display: flex;
+    }
+
+    .bottom-sheet {
+      width: 100%;
+      max-height: 84%;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: sheetUp 0.22s ease-out;
+    }
+
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f2f2f2;
+    }
+
+    .sheet-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #111;
+    }
+
+    .sheet-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .sheet-clear {
+      font-size: 13px;
+      color: #8e8e93;
+      cursor: pointer;
+    }
+
+    .sheet-close {
+      font-size: 18px;
+      color: #333;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sheet-body {
+      padding: 12px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 460px;
+    }
+
+    /* 批号选择列表项 */
+    .batch-product-header {
+      display: flex;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .batch-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #f8f8f8;
+    }
+
+    .batch-title {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #111;
+      line-height: 1.4;
+    }
+
+    .batch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #fafafa;
+    }
+
+    .batch-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .batch-no {
+      font-size: 13px;
+      font-weight: 500;
+      color: #222;
+    }
+
+    .batch-sub {
+      font-size: 11.5px;
+      color: #8e8e93;
+    }
+
+    /* 数字步进器 Stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .step-btn {
+      width: 28px;
+      height: 28px;
+      background: #fafafa;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .step-val {
+      width: 38px;
+      height: 28px;
+      text-align: center;
+      border: none;
+      border-left: 1px solid #d9d9d9;
+      border-right: 1px solid #d9d9d9;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* 购物车商品卡片 */
+    .cart-item-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f7f7f7;
+    }
+
+    .cart-item-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 6px;
+      background: #f0f0f0;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .cart-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .cart-item-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #111;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .cart-item-batch {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .cart-item-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cart-item-price {
+      font-size: 14.5px;
+      font-weight: bold;
+      color: var(--danger);
+    }
+
+    .sheet-footer {
+      padding: 12px 16px 24px 16px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn-block-primary {
+      flex: 1;
+      height: 44px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 22px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* 处方单卡片全新高对比视觉设计（突出姓名、性别、电话、诊断，弱化单号，移除明细） */
+    .rx-card {
+      background: #ffffff;
+      border: 1px solid #d9e2ec;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .rx-patient-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .rx-patient-main {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .rx-patient-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: 0.5px;
+    }
+
+    .rx-patient-meta {
+      font-size: 12px;
+      color: #4b5563;
+      background: #f3f4f6;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .rx-patient-phone {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+      font-family: Consolas, monospace;
+    }
+
+    .btn-take-rx {
+      background: linear-gradient(135deg, #009fe8, #0070c0);
+      color: #fff;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 159, 232, 0.3);
+      flex-shrink: 0;
+    }
+
+    .btn-take-rx:active {
+      transform: scale(0.96);
+    }
+
+    .rx-diagnosis-box {
+      background: #f0f7ff;
+      border: 1px solid #bae0ff;
+      border-left: 3px solid #009fe8;
+      border-radius: 4px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .rx-diagnosis-label {
+      font-size: 12px;
+      font-weight: bold;
+      color: #005a9c;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .rx-diagnosis-val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #003a8c;
+      line-height: 1.4;
+    }
+
+    .rx-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 4px;
+      border-top: 1px dashed #f0f0f0;
+    }
+
+    .rx-no-muted {
+      font-size: 11.5px;
+      color: #9ca3af;
+      font-family: Consolas, monospace;
+    }
+
+    .rx-status-tag {
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      background: #e6f7ff;
+      color: #0958d9;
+    }
+
+    /* ================= 页面 3：结算收款界面 ================= */
+    .pay-page {
+      background: #f8f9fa;
+      overflow-y: auto;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .pay-page::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .pay-content {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .pay-amount-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 2px 0;
+    }
+
+    .pay-amount-label {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .pay-amount-val {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--danger);
+      margin-top: 1px;
+    }
+
+    .pay-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    .pay-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .pay-method-card {
+      background: #fff;
+      border: 1.5px solid #e5e6eb;
+      border-radius: 10px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      position: relative;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1f2329;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .pay-method-card.active {
+      border-color: var(--primary);
+      background: #f0f9ff;
+      color: var(--primary-dark);
+    }
+
+    .pay-method-card.active::after {
+      content: "✔";
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      background: var(--primary);
+      color: #fff;
+      font-size: 9px;
+      width: 15px;
+      height: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px 0 8px 0;
+    }
+
+    .member-card-pay-panel {
+      background: #fffbe6;
+      border: 1px solid #ffd591;
+      border-radius: 10px;
+      padding: 9px 12px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .member-card-pay-panel.show {
+      display: flex;
+    }
+
+    .member-card-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: #555;
+    }
+
+    .member-card-row .val {
+      font-weight: 600;
+      color: #111;
+    }
+
+    .member-card-amount-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 5px;
+      border-top: 1px dashed #ffe58f;
+      font-size: 12.5px;
+    }
+
+    .card-amount-input {
+      width: 95px;
+      height: 28px;
+      padding: 0 8px;
+      border: 1px solid #fa8c16;
+      border-radius: 4px;
+      font-size: 13.5px;
+      font-weight: bold;
+      color: var(--danger);
+      background: #fff;
+      text-align: right;
+    }
+
+    .cash-input-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .cash-input {
+      border: none;
+      outline: none;
+      font-size: 15px;
+      font-weight: bold;
+      color: #111;
+      width: 60%;
+    }
+
+    .change-text {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .change-val {
+      font-weight: bold;
+      color: #111;
+    }
+
+    .promo-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .promo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f6f6f6;
+      cursor: pointer;
+    }
+
+    .promo-item:last-child {
+      border-bottom: none;
+    }
+
+    .promo-radio {
+      width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      border: 1.5px solid #c9cdd4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .promo-item.checked .promo-radio {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+
+    .promo-item.checked .promo-radio::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background: #fff;
+    }
+
+    .promo-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .promo-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .promo-tags {
+      display: flex;
+      gap: 5px;
+    }
+
+    .promo-tag-pill {
+      font-size: 9.5px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid #b7e0fb;
+      color: #0070c0;
+    }
+
+    .promo-discount {
+      font-size: 13px;
+      font-weight: bold;
+      color: #111;
+    }
+
+    .pay-btn-fixed {
+      margin-top: auto;
+      padding: 8px 0;
+    }
+
+    .pwd-modal-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 24px;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .pwd-inputs-box {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .pwd-dot {
+      width: 40px;
+      height: 44px;
+      border: 1.5px solid #d9d9d9;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: #fafafa;
+    }
+
+    /* ================= 需求 4：扫顾客付款码页面 (主扫模式模拟) ================= */
+    .scan-code-page {
+      background: #000;
+      color: #fff;
+      padding-top: 0;
+      padding-bottom: 0;
+      position: relative;
+    }
+
+    .scan-code-topbar {
+      position: absolute;
+      top: 48px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 30;
+    }
+
+    .scan-code-center-box {
+      position: absolute;
+      top: 36%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 250px;
+      height: 250px;
+      border: 2px solid #00d2ff;
+      border-radius: 14px;
+      box-shadow: 0 0 20px rgba(0, 210, 255, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .scan-code-laser {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #00d2ff;
+      box-shadow: 0 0 8px #00d2ff;
+      animation: codeScanAnim 2s ease-in-out infinite;
+    }
+
+    @keyframes codeScanAnim {
+      0% { top: 0; }
+      50% { top: 98%; }
+      100% { top: 0; }
+    }
+
+    .scan-code-bottom-actions {
+      position: absolute;
+      bottom: 40px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      z-index: 30;
+    }
+
+    .btn-simulate-paycode {
+      width: 100%;
+      height: 46px;
+      background: linear-gradient(135deg, #07c160, #10ad57);
+      color: #fff;
+      border: none;
+      border-radius: 23px;
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(7, 193, 96, 0.4);
+      cursor: pointer;
+    }
+
+    /* 收款成功凭证 */
+    .success-modal-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 20px 20px;
+      text-align: center;
+    }
+
+    .success-icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: var(--success);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin-bottom: 12px;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .success-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #111;
+    }
+
+    .success-amount {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+      margin: 8px 0 16px 0;
+    }
+
+    .receipt-info-box {
+      width: 100%;
+      background: #f7f8fa;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #4e5969;
+    }
+
+    .receipt-row .val {
+      font-weight: 500;
+      color: #1d2129;
+    }
+
+    .success-btn-group {
+      width: 100%;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-outline-action {
+      flex: 1;
+      height: 44px;
+      border: 1px solid #e5e6eb;
+      background: #fff;
+      color: #1f2329;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 22px;
+      cursor: pointer;
+    }
+
+    /* 门店选择抽屉 */
+    .store-list-item {
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14.5px;
+      color: #1f2329;
+      cursor: pointer;
+      border-bottom: 1px solid #f2f3f5;
+    }
+
+    .store-list-item.selected {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Toast 提示 */
+    .app-toast {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.82);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .app-toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部演示控制切换栏 -->
+  <div class="view-toolbar">
+    <span>💡 快捷体验：</span>
+    <button class="toolbar-btn active" onclick="switchPage('pageHome')">1.首页</button>
+    <button class="toolbar-btn" onclick="switchPage('pageScan')">2.扫码收银</button>
+    <button class="toolbar-btn" onclick="openKeypad('member')">3.录入会员</button>
+    <button class="toolbar-btn" onclick="simulateScanDrug()">4.扫码添药</button>
+    <button class="toolbar-btn" onclick="simulateScanTraceCode()">5.模拟扫追溯码</button>
+    <button class="toolbar-btn" onclick="openRxModal()">6.处方单提单</button>
+    <button class="toolbar-btn" onclick="goToCheckout()">7.结算收款</button>
+  </div>
+
+  <!-- 模拟手机外壳主体 -->
+  <div class="mobile-wrapper" id="mobileWrapper">
+
+    <!-- 顶部状态栏 -->
+    <div class="status-bar" id="statusBar">
+      <span id="currentTime">09:41</span>
+      <div class="status-icons">
+        <span>5G</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <!-- 灵动岛 -->
+    <div class="island"></div>
+
+    <!-- 应用各页面视口 -->
+    <div class="app-screen">
+
+      <!-- ================= 页面 1：店内收银 首页 ================= -->
+      <div class="page active" id="pageHome">
+        <div class="nav-bar">
+          <div class="nav-back">‹</div>
+          <div class="nav-title-group" onclick="openStoreModal()">
+            <div class="nav-main-title">店内收银</div>
+            <div class="nav-sub-title">
+              <span>🏠</span>
+              <span id="currentStoreName">湖南公司青竹湖门店</span>
+              <span>▾</span>
+            </div>
+          </div>
+          <div style="width: 36px;"></div>
+        </div>
+
+        <div class="home-content">
+          <!-- 我的订单快捷卡片 -->
+          <div class="order-center-card">
+            <div class="card-title">我的订单</div>
+            <div class="order-status-grid">
+              <div class="order-status-item" onclick="showToast('查看待付款订单')">
+                <div class="status-icon-box">
+                  <span>📄</span>
+                  <span class="badge-count">3</span>
+                </div>
+                <span class="status-label">待付款</span>
+              </div>
+              <div class="order-status-item" onclick="showToast('查看已完成订单')">
+                <div class="status-icon-box">
+                  <span>🛍️</span>
+                </div>
+                <span class="status-label">已完成</span>
+              </div>
+              <div class="order-status-item" onclick="showToast('查看售后/退款订单')">
+                <div class="status-icon-box">
+                  <span>💰</span>
+                  <span class="badge-count">22</span>
+                </div>
+                <span class="status-label">售后/退款</span>
+              </div>
+              <div class="order-status-item" onclick="showToast('查看全部订单')">
+                <div class="status-icon-box">
+                  <span>📋</span>
+                </div>
+                <span class="status-label">全部订单</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 业务模式卡片 -->
+          <div class="scene-list">
+            <div class="scene-card" onclick="enterScan('活力坐标')">
+              <div class="scene-left">
+                <div class="scene-icon" style="background: #e6f6fe; color: #0070c0; font-size: 22px;">❖</div>
+                <div class="scene-name">活力坐标</div>
+              </div>
+              <div class="scene-arrow">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 页面 2：商品扫码收银界面 ================= -->
+      <div class="page scan-page" id="pageScan">
+        <!-- 模拟相机视图 -->
+        <div class="camera-viewport">
+          <div class="camera-overlay"></div>
+          <div class="scan-laser"></div>
+        </div>
+
+        <!-- 顶部快捷控制栏 (清爽还原：左侧关闭与会员胶囊，右侧场景与订单) -->
+        <div class="scan-topbar">
+          <div class="scan-top-left">
+            <div class="btn-circle-close" onclick="switchPage('pageHome')" title="返回首页">✕</div>
+            <!-- 会员手机号展示胶囊 (默认空置不展示，录入后展示) -->
+            <div class="member-phone-badge" id="memberPhoneBadge" onclick="showMemberCardAction()">
+              <span>👤</span>
+              <span id="displayMemberPhone">18510178068</span>
+              <span class="clear-member" title="解绑会员" onclick="event.stopPropagation(); unbindMember();">✕</span>
+            </div>
+          </div>
+          
+          <div class="scan-top-actions">
+            <div class="scan-pill-btn">
+              <span id="scanSceneLabel">活力坐标</span>
+            </div>
+            <div class="scan-pill-btn" onclick="showToast('查看当前订单')">
+              <span>📋 订单</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 优化 2：处方单按钮改到右侧悬浮，极度醒目且顶部完全不挤！ -->
+        <div class="floating-rx-btn" id="btnFloatingRx" onclick="openRxModal()">
+          <span>💊 处方单</span>
+          <span class="rx-badge-num" id="rxCountBadge">2</span>
+        </div>
+
+        <!-- 扫码准星提示 -->
+        <div class="scan-aim-box" onclick="simulateScanDrug()">
+          <div class="scan-tip-toast" id="scanTip">请对准条码 进行扫描</div>
+          <div style="font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 6px;">(点击此处可模拟扫描药品)</div>
+        </div>
+
+        <!-- 息屏省电模式 -->
+        <div class="screen-sleep-mask" id="sleepMask" onclick="wakeScreen()">
+          <div class="sleep-hint">
+            点击屏幕<br/>重新唤起摄像头
+          </div>
+          <div class="torch-box" onclick="event.stopPropagation(); toggleTorch();">
+            <div class="torch-icon">🔦</div>
+            <span id="torchLabel">轻触照亮</span>
+          </div>
+        </div>
+
+        <!-- 底部黑色操作栏 (优化 1：默认购物车空置，¥0，去收银禁用) -->
+        <div class="scan-bottom-bar">
+          <div class="scan-input-row" onclick="openKeypad('drug')">
+            <span class="scan-input-placeholder">会员号 / 追溯码 / 69码 / 商品编码</span>
+            <div class="btn-quick-add">+</div>
+          </div>
+
+          <div class="scan-checkout-row">
+            <div class="cart-summary" onclick="openCartModal()">
+              <div class="cart-badge-icon">
+                <span>🛒</span>
+                <span class="badge-count" id="cartCountBadge" style="display: none;">0</span>
+              </div>
+              <div class="cart-price-info">
+                <div class="cart-price" id="cartPriceDisplay">¥0</div>
+                <div class="cart-tag">零售价</div>
+              </div>
+            </div>
+
+            <button class="btn-checkout-primary" id="btnGoPay" disabled onclick="goToCheckout()">
+              去收银
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 页面 3：结算收款界面 ================= -->
+      <div class="page pay-page" id="pagePay">
+        <div class="nav-bar" style="background: #fff; border-bottom: 1px solid #f0f0f0;">
+          <div class="nav-back" onclick="switchPage('pageScan')">‹</div>
+          <div class="nav-main-title">结算收款</div>
+          <div style="width: 36px;"></div>
+        </div>
+
+        <div class="pay-content">
+          <!-- 金额展示 -->
+          <div class="pay-amount-box">
+            <div class="pay-amount-label">待收金额</div>
+            <div class="pay-amount-val" id="payTotalAmount">¥0.0</div>
+          </div>
+
+          <!-- 支付方式（已录会员显示【会员储值卡】，未录不显示） -->
+          <div>
+            <div class="pay-section-title">支付方式</div>
+            <div class="pay-methods-grid" id="payMethodsGrid">
+              <div class="pay-method-card active" id="methodQr" onclick="selectPayMethod('qr')">
+                <span style="color:#07c160; font-size: 18px;">❖</span>
+                <span>聚合收款</span>
+              </div>
+              <div class="pay-method-card" id="methodCash" onclick="selectPayMethod('cash')">
+                <span style="color:#ff3b30; font-size: 18px;">💴</span>
+                <span>现金支付</span>
+              </div>
+              <!-- 会员储值卡（动态显隐） -->
+              <div class="pay-method-card" id="methodCard" onclick="selectPayMethod('card')" style="display: none;">
+                <span style="color:#fa8c16; font-size: 18px;">💳</span>
+                <span>会员储值卡</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 储值卡专属面板 -->
+          <div class="member-card-pay-panel" id="memberCardPanel">
+            <div class="member-card-row">
+              <span>会员姓名</span>
+              <span class="val" id="cardMemberName">赵**</span>
+            </div>
+            <div class="member-card-row">
+              <span>储值卡余额</span>
+              <span class="val" style="color:#fa8c16; font-size:15px;" id="cardBalanceVal">¥150.00</span>
+            </div>
+            <div class="member-card-amount-row">
+              <span style="font-weight:600; color:#333;">扣款金额</span>
+              <div>
+                ¥ <input type="number" class="card-amount-input" id="cardDeductAmount" oninput="validateCardDeduct(this)" step="0.1">
+              </div>
+            </div>
+          </div>
+
+          <!-- 现金实收输入栏 -->
+          <div class="cash-input-card" id="cashInputRow" style="display: none;">
+            <input type="number" class="cash-input" id="cashReceived" placeholder="请输入实收金额" oninput="calcChange()">
+            <div class="change-text">
+              找零 <span class="change-val" id="cashChangeVal">¥0.0</span>
+            </div>
+          </div>
+
+          <!-- 促销套餐单选 -->
+          <div>
+            <div class="pay-section-title">促销套餐 (单选)</div>
+            <div class="promo-card" id="promoList">
+              <div class="promo-item checked" data-discount="30.0" onclick="selectPromoSingle(this)">
+                <div class="promo-radio"></div>
+                <div class="promo-info">
+                  <div class="promo-name">开业盛典全能大礼包 A</div>
+                  <div class="promo-tags">
+                    <span class="promo-tag-pill">门店直送</span>
+                    <span class="promo-tag-pill">不支持退券</span>
+                  </div>
+                </div>
+                <div class="promo-discount">立减 ¥30.0</div>
+              </div>
+
+              <div class="promo-item" data-discount="15.0" onclick="selectPromoSingle(this)">
+                <div class="promo-radio"></div>
+                <div class="promo-info">
+                  <div class="promo-name">新人健康专享礼包 B</div>
+                  <div class="promo-tags">
+                    <span class="promo-tag-pill">限时特惠</span>
+                  </div>
+                </div>
+                <div class="promo-discount">立减 ¥15.0</div>
+              </div>
+
+              <div class="promo-item" data-discount="10.0" onclick="selectPromoSingle(this)">
+                <div class="promo-radio"></div>
+                <div class="promo-info">
+                  <div class="promo-name">慢病关爱立减券 C</div>
+                  <div class="promo-tags">
+                    <span class="promo-tag-pill">慢病专享</span>
+                  </div>
+                </div>
+                <div class="promo-discount">立减 ¥10.0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 确认收款按钮 -->
+          <div class="pay-btn-fixed">
+            <button class="btn-block-primary" onclick="confirmPayment()">确认收款</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 优化 4：唤起扫码页面 (扫顾客微信/支付宝付款码) ================= -->
+      <div class="page scan-code-page" id="pageScanCustomerCode">
+        <div class="camera-viewport">
+          <div class="camera-overlay"></div>
+        </div>
+
+        <div class="scan-code-topbar">
+          <div class="btn-circle-close" onclick="switchPage('pagePay')" title="返回结算">✕</div>
+          <div style="font-size: 16px; font-weight: 600;">扫描顾客付款码</div>
+          <div style="width: 32px;"></div>
+        </div>
+
+        <div style="position: absolute; top: 110px; width: 100%; text-align: center; z-index: 20;">
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7);">应收金额</div>
+          <div style="font-size: 32px; font-weight: 800; color: #ff3b30; margin-top: 2px;" id="scanPayCodeAmount">¥42.9</div>
+        </div>
+
+        <!-- 扫码准星框 -->
+        <div class="scan-code-center-box">
+          <div class="scan-code-laser"></div>
+          <div style="font-size: 13.5px; color: #fff; padding: 0 20px; line-height: 1.5;">
+            请将扫描框对准<br/>顾客微信 / 支付宝付款码
+          </div>
+        </div>
+
+        <div class="scan-code-bottom-actions">
+          <button class="btn-simulate-paycode" onclick="simulateScanCustomerPayCode()">
+            ⚡ 模拟识别顾客付款码扣款
+          </button>
+          <div style="font-size: 12px; color: rgba(255,255,255,0.6);">
+            支持微信、支付宝、云闪付条形码自动识别
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= 弹窗抽屉 1：九宫格数字小键盘 ================= -->
+    <div class="keypad-drawer" id="keypadDrawer">
+      <div class="keypad-header">
+        <div class="quick-tag-row">
+          <div class="quick-tag" id="tagDrugCode" onclick="switchKeypadMode('drug')">请输入正确编码</div>
+          <div class="quick-tag" id="tagMemberCode" onclick="switchKeypadMode('member')">请输入正确会员号</div>
+          <div class="quick-tag tag-trace" id="tagTraceCode" onclick="simulateScanTraceCode()">📸 模拟扫追溯码</div>
+        </div>
+        <div class="keypad-input-box">
+          <div class="keypad-val-display" id="keypadDisplay"></div>
+          <div class="btn-keypad-add" onclick="submitKeypadCode()">+</div>
+        </div>
+      </div>
+
+      <div class="keypad-grid">
+        <div class="key-btn" onclick="pressKey('1')">1</div>
+        <div class="key-btn" onclick="pressKey('2')">2 <span class="key-sub">ABC</span></div>
+        <div class="key-btn" onclick="pressKey('3')">3 <span class="key-sub">DEF</span></div>
+        <div class="key-btn" onclick="pressKey('4')">4 <span class="key-sub">GHI</span></div>
+        <div class="key-btn" onclick="pressKey('5')">5 <span class="key-sub">JKL</span></div>
+        <div class="key-btn" onclick="pressKey('6')">6 <span class="key-sub">MNO</span></div>
+        <div class="key-btn" onclick="pressKey('7')">7 <span class="key-sub">PQRS</span></div>
+        <div class="key-btn" onclick="pressKey('8')">8 <span class="key-sub">TUV</span></div>
+        <div class="key-btn" onclick="pressKey('9')">9 <span class="key-sub">WXYZ</span></div>
+        <div class="key-btn" onclick="closeKeypad()" style="font-size:14px; color:#666;">收起</div>
+        <div class="key-btn" onclick="pressKey('0')">0</div>
+        <div class="key-btn" onclick="pressBackspace()">⌫</div>
+      </div>
+    </div>
+
+    <!-- ================= 弹窗抽屉 2：商品扫码-选择批号 ================= -->
+    <div class="modal-drawer-mask" id="batchModalMask">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <div class="sheet-title">选择批号</div>
+          <div class="sheet-close" onclick="closeBatchModal()">✕</div>
+        </div>
+
+        <div class="sheet-body">
+          <div class="batch-product-header">
+            <img class="batch-img" src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=120&q=80" alt="药品">
+            <div>
+              <div class="batch-title">磷酸奥司他韦颗粒 10g/10包</div>
+              <div style="font-size: 11.5px; color: #8e8e93; margin-top: 4px;">零售价：¥42.9 / 盒</div>
+            </div>
+          </div>
+
+          <div class="batch-row">
+            <div class="batch-meta">
+              <span class="batch-no">批号 883275088608020848</span>
+              <span class="batch-sub">库存 1.01 效期 2026-5-26</span>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" onclick="changeStep('stepBatch1', -1)">-</button>
+              <input type="text" class="step-val" id="stepBatch1" value="1" readonly>
+              <button class="step-btn" onclick="changeStep('stepBatch1', 1)">+</button>
+            </div>
+          </div>
+
+          <div class="batch-row">
+            <div class="batch-meta">
+              <span class="batch-no">批号 883275088608020849</span>
+              <span class="batch-sub">库存 1.01 效期 2026-5-26</span>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" onclick="changeStep('stepBatch2', -1)">-</button>
+              <input type="text" class="step-val" id="stepBatch2" value="0" readonly>
+              <button class="step-btn" onclick="changeStep('stepBatch2', 1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-footer">
+          <button class="btn-block-primary" onclick="confirmBatchSelection()">下一步</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 优化 3：处方单抽屉（只展示待提单的处方单） ================= -->
+    <div class="modal-drawer-mask" id="rxModalMask">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <div class="sheet-title">待提处方单</div>
+          <div class="sheet-close" onclick="closeRxModal()">✕</div>
+        </div>
+
+        <div class="sheet-body" id="rxListContainer">
+          <!-- 动态渲染待提单列表 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 处方药追溯码强合规采集半窗 ================= -->
+    <div class="modal-drawer-mask" id="traceCollectModalMask">
+      <div class="bottom-sheet" style="max-height: 88%;">
+        <div class="sheet-header">
+          <div class="sheet-title" style="display:flex; align-items:center; gap:6px;">
+            <span style="color:#009fe8;">📦</span>
+            <span>处方药追溯码采集</span>
+          </div>
+          <div class="sheet-close" onclick="closeTraceCollectModal()">✕</div>
+        </div>
+
+        <div class="sheet-body" style="gap: 14px;">
+          <!-- 药品信息卡片 -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; gap:12px;">
+            <img id="tcDrugImg" src="" style="width:54px; height:54px; border-radius:6px; object-fit:cover; background:#fff;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+              <div id="tcDrugName" style="font-size:14px; font-weight:bold; color:#111;"></div>
+              <div style="font-size:11.5px; color:#666;" id="tcDrugBatch"></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                <span style="font-size:13px; font-weight:bold; color:#ff3b30;" id="tcDrugPrice"></span>
+                <span style="font-size:12px; font-weight:600; color:#0070c0;" id="tcRequiredCount"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 采集进度条 -->
+          <div style="background:#fff; border:1px solid #eee; border-radius:8px; padding:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
+              <span style="font-weight:600; color:#333;">追溯码采集进度</span>
+              <span id="tcProgressText" style="font-weight:bold; color:#fa8c16;">已采 0 / 需采 2 盒</span>
+            </div>
+            <div style="width:100%; height:8px; background:#f0f0f0; border-radius:4px; overflow:hidden;">
+              <div id="tcProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #fa8c16, #009fe8); transition:width 0.25s;"></div>
+            </div>
+          </div>
+
+          <!-- 快捷模拟扫入按钮 -->
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="btnSimulateScanOne" style="flex:1; height:42px; background:linear-gradient(135deg, #009fe8, #0070c0); color:#fff; border:none; border-radius:8px; font-size:13.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(0,159,232,0.3);" onclick="simulateScanOneTraceCode()">
+              <span>📸</span>
+              <span id="btnScanTraceText">模拟扫描第 1 盒追溯码</span>
+            </button>
+          </div>
+
+          <!-- 已采集追溯码列表 -->
+          <div>
+            <div style="font-size:13px; font-weight:600; color:#333; margin-bottom:8px;">
+              已采追溯码列表 (一物一码)
+            </div>
+            <div id="tcCodeListContainer" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- 动态条目 -->
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-footer" style="flex-direction:column; gap:8px;">
+          <button class="btn-block-primary" id="btnFinishTraceCollect" disabled onclick="finishTraceCollect()">
+            请按数量采齐追溯码后完成
+          </button>
+          <div style="font-size:11.5px; color:#888; text-align:center;">
+            * 监管合规要求：处方药必须 100% 采集一物一码方可进入收银结算
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 弹窗抽屉 3：订单确认 (购物车抽屉) ================= -->
+    <div class="modal-drawer-mask" id="cartModalMask">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <div class="sheet-title">订单确认</div>
+          <div class="sheet-actions">
+            <span class="sheet-clear" onclick="clearCart()">清空</span>
+            <div class="sheet-close" onclick="closeCartModal()">✕</div>
+          </div>
+        </div>
+
+        <div class="sheet-body" id="cartListContainer">
+          <!-- 动态渲染购物车列表 -->
+        </div>
+
+        <div class="sheet-footer">
+          <div class="cart-price-info">
+            <div class="cart-price" id="cartDrawerPrice">¥0.0</div>
+            <div class="cart-tag">零售价</div>
+          </div>
+          <button class="btn-checkout-primary" id="btnDrawerPay" disabled onclick="goToCheckout()">去收款</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 储值卡密码确认弹窗 ================= -->
+    <div class="modal-drawer-mask" id="pwdModalMask">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <div class="sheet-title">会员储值卡密码确认</div>
+          <div class="sheet-close" onclick="closePwdModal()">✕</div>
+        </div>
+        <div class="pwd-modal-content">
+          <div style="font-size:14px; color:#555;">请输入会员支付密码以完成扣款</div>
+          <div class="pwd-inputs-box">
+            <div class="pwd-dot">●</div>
+            <div class="pwd-dot">●</div>
+            <div class="pwd-dot">●</div>
+            <div class="pwd-dot">●</div>
+            <div class="pwd-dot">●</div>
+            <div class="pwd-dot">●</div>
+          </div>
+          <div style="font-size:13px; color:#fa8c16;">本次扣款：<span id="pwdDeductShow" style="font-weight:bold;">¥0.0</span></div>
+          <button class="btn-block-primary" onclick="submitCardPayment()" style="width:100%; margin-top:10px;">确认支付扣费</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 弹窗抽屉 5：收款成功凭证 ================= -->
+    <div class="modal-drawer-mask" id="successModalMask">
+      <div class="bottom-sheet">
+        <div class="sheet-header" style="border: none;">
+          <div></div>
+          <div class="sheet-close" onclick="closeSuccessModal()">✕</div>
+        </div>
+
+        <div class="success-modal-body">
+          <div class="success-icon-circle">✔</div>
+          <div class="success-title">收款成功</div>
+          <div class="success-amount" id="successAmountDisplay">¥42.9</div>
+
+          <div class="receipt-info-box">
+            <div class="receipt-row">
+              <span>订单号</span>
+              <span class="val" id="receiptOrderNo">898352598977964767</span>
+            </div>
+            <div class="receipt-row">
+              <span>付款方式</span>
+              <span class="val" id="receiptPayMethod">聚合扫码 (微信支付)</span>
+            </div>
+          </div>
+
+          <div class="success-btn-group">
+            <button class="btn-outline-action" onclick="continueSelling()">继续收款</button>
+            <button class="btn-block-primary" onclick="showToast('跳转订单详情...')">查看订单</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 弹窗抽屉 6：请选择门店 ================= -->
+    <div class="modal-drawer-mask" id="storeModalMask">
+      <div class="bottom-sheet">
+        <div class="sheet-header">
+          <div class="sheet-title">请选择门店</div>
+          <div class="sheet-close" onclick="closeStoreModal()">✕</div>
+        </div>
+
+        <div class="sheet-body">
+          <div class="store-list-item selected" onclick="pickStore('湖南公司青竹湖门店', this)">
+            <span>湖南公司青竹湖门店</span>
+            <span style="color:var(--primary);">✔</span>
+          </div>
+          <div class="store-list-item" onclick="pickStore('长沙中心仓2F', this)">
+            <span>长沙中心仓2F</span>
+            <span></span>
+          </div>
+          <div class="store-list-item" onclick="pickStore('长沙中心仓北库房1F', this)">
+            <span>长沙中心仓北库房1F</span>
+            <span></span>
+          </div>
+          <div class="store-list-item" onclick="pickStore('不停靠月台', this)">
+            <span>不停靠月台</span>
+            <span></span>
+          </div>
+          <div class="store-list-item" onclick="pickStore('长沙中心仓3F', this)">
+            <span>长沙中心仓3F</span>
+            <span></span>
+          </div>
+          <div class="store-list-item" onclick="pickStore('长沙中心仓4F', this)">
+            <span>长沙中心仓4F</span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="app-toast" id="appToast">提示内容</div>
+
+    <!-- 底部 Home Indicator -->
+    <div class="home-indicator" id="homeBar"></div>
+
+  </div>
+
+  <script>
+    // 全局业务数据状态
+    let currentStore = "湖南公司青竹湖门店";
+    let currentScene = "活力坐标";
+    let selectedPayMethod = "qr"; // 'qr', 'cash', 'card'
+    let isTorchOn = false;
+    let keypadBuffer = "";
+    let keypadTarget = "drug";
+
+    // 优化 1：初始状态会员空置
+    let currentMember = {
+      isBound: false,
+      phone: "",
+      name: "",
+      cardBalance: 150.00
+    };
+
+    // 优化 1：初始状态购物车空置
+    let cartItems = [];
+
+    // 优化 3：处方单数据源（只维护未提单的记录）
+    let prescriptionList = [
+      {
+        id: "rx1",
+        rxNo: "RX202610290001",
+        patientName: "赵**",
+        age: "32岁",
+        gender: "男",
+        phone: "188****6060",
+        realPhone: "18888886060",
+        diagnosis: "急性上呼吸道感染、急性咽喉炎",
+        brief: "磷酸奥司他韦颗粒 x1, 复方甘草片 x2",
+        drug: {
+          name: "【处方药】磷酸奥司他韦颗粒 10g/10包",
+          batch: "883275088608020848",
+          price: 42.9,
+          count: 1,
+          img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=120&q=80"
+        }
+      },
+      {
+        id: "rx2",
+        rxNo: "RX202610290002",
+        patientName: "李**",
+        age: "58岁",
+        gender: "女",
+        phone: "139****1234",
+        realPhone: "13912345678",
+        diagnosis: "原发性高血压 II 期、痛风性关节炎",
+        brief: "氨氯地平片 x2, 双氯芬酸钠缓释胶囊 x1",
+        drug: {
+          name: "【处方药】苯磺酸氨氯地平片 5mg*14片",
+          batch: "883275088608020849",
+          price: 36.8,
+          count: 2,
+          img: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=120&q=80"
+        }
+      },
+      {
+        id: "rx3",
+        rxNo: "RX202610290003",
+        patientName: "王*强",
+        age: "41岁",
+        gender: "男",
+        phone: "135****8899",
+        realPhone: "13588992211",
+        diagnosis: "急性扁桃体炎、上呼吸道感染",
+        brief: "阿莫西林胶囊 x2, 蓝芩口服液 x1",
+        drug: {
+          name: "【处方药】阿莫西林胶囊 0.25g*24粒",
+          batch: "883275088608020850",
+          price: 21.5,
+          count: 2,
+          img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=120&q=80"
+        }
+      }
+    ];
+
+    // 更新时间显示
+    function updateClock() {
+      const now = new Date();
+      const hrs = String(now.getHours()).padStart(2, "0");
+      const mins = String(now.getMinutes()).padStart(2, "0");
+      document.getElementById("currentTime").textContent = `${hrs}:${mins}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 更新屏幕左上角会员展示
+    function updateMemberDisplay() {
+      const badge = document.getElementById("memberPhoneBadge");
+      const phoneSpan = document.getElementById("displayMemberPhone");
+      const cardPayMethod = document.getElementById("methodCard");
+
+      if (currentMember && currentMember.isBound) {
+        badge.classList.add("show");
+        phoneSpan.textContent = currentMember.phone;
+        // 已录入会员，结算页显示【会员储值卡】
+        if (cardPayMethod) cardPayMethod.style.display = "flex";
+      } else {
+        badge.classList.remove("show");
+        // 未录入会员，结算页隐藏【会员储值卡】
+        if (cardPayMethod) cardPayMethod.style.display = "none";
+        if (selectedPayMethod === "card") {
+          selectPayMethod("qr");
+        }
+      }
+    }
+
+    // 解绑会员
+    function unbindMember() {
+      currentMember.isBound = false;
+      currentMember.phone = "";
+      currentMember.name = "";
+      updateMemberDisplay();
+      showToast("已解绑当前会员");
+    }
+
+    function showMemberCardAction() {
+      showToast(`当前会员：${currentMember.name || "已认证会员"} (${currentMember.phone}) 储值卡余额: ¥${currentMember.cardBalance}`);
+    }
+
+    // 切换主页面
+    function switchPage(pageId) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(pageId).classList.add("active");
+
+      const statusBar = document.getElementById("statusBar");
+      const homeBar = document.getElementById("homeBar");
+      if (pageId === "pageScan" || pageId === "pageScanCustomerCode") {
+        statusBar.classList.add("dark");
+        homeBar.classList.add("light");
+      } else {
+        statusBar.classList.remove("dark");
+        homeBar.classList.remove("light");
+      }
+
+      closeAllModals();
+      updateCartSummary();
+      updateMemberDisplay();
+      renderRxList();
+    }
+
+    function enterScan(sceneName) {
+      currentScene = sceneName;
+      document.getElementById("scanSceneLabel").textContent = sceneName;
+      switchPage("pageScan");
+      showToast(`进入【${sceneName}】模式收银`);
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById("appToast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1800);
+    }
+
+    function closeAllModals() {
+      document.querySelectorAll(".modal-drawer-mask").forEach(m => m.classList.remove("show"));
+      const keypad = document.getElementById("keypadDrawer");
+      if (keypad) keypad.classList.remove("show");
+    }
+
+    // 模拟扫码添加药品
+    function simulateScanDrug() {
+      const scanTip = document.getElementById("scanTip");
+      scanTip.textContent = "已识别商品，正在载入批号...";
+      setTimeout(() => {
+        openBatchModal();
+        scanTip.textContent = "请对准条码 进行扫描";
+      }, 350);
+    }
+
+    function openBatchModal() {
+      closeAllModals();
+      document.getElementById("batchModalMask").classList.add("show");
+    }
+
+    function closeBatchModal() {
+      document.getElementById("batchModalMask").classList.remove("show");
+    }
+
+    function changeStep(id, delta) {
+      const input = document.getElementById(id);
+      let val = parseInt(input.value) || 0;
+      val = Math.max(0, val + delta);
+      input.value = val;
+    }
+
+    function confirmBatchSelection() {
+      const count1 = parseInt(document.getElementById("stepBatch1").value) || 0;
+      const count2 = parseInt(document.getElementById("stepBatch2").value) || 0;
+      const totalNew = count1 + count2;
+
+      if (totalNew <= 0) {
+        showToast("请至少选择一个批号数量");
+        return;
+      }
+
+      cartItems.push({
+        id: Date.now(),
+        name: "磷酸奥司他韦颗粒 10g/10包",
+        batch: "883275088608020848",
+        price: 42.9,
+        count: totalNew,
+        img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=120&q=80"
+      });
+
+      closeBatchModal();
+      updateCartSummary();
+      showToast(`已添加 ${totalNew} 件商品至订单`);
+    }
+
+    // 优化 3：处方单抽屉交互（仅渲染待提单列表）
+    function openRxModal() {
+      closeAllModals();
+      renderRxList();
+      document.getElementById("rxModalMask").classList.add("show");
+    }
+
+    function closeRxModal() {
+      document.getElementById("rxModalMask").classList.remove("show");
+    }
+
+    function renderRxList() {
+      const container = document.getElementById("rxListContainer");
+      const badgeNum = document.getElementById("rxCountBadge");
+      badgeNum.textContent = prescriptionList.length;
+
+      if (prescriptionList.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding: 48px 20px; color:#999;">
+            <div style="font-size:36px; margin-bottom:10px;">📋</div>
+            <div>暂无待提单处方单</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = "";
+      prescriptionList.forEach((rx, index) => {
+        const card = document.createElement("div");
+        card.className = "rx-card";
+        card.innerHTML = `
+          <div class="rx-patient-header">
+            <div class="rx-patient-main">
+              <span class="rx-patient-name">${rx.patientName}</span>
+              <span class="rx-patient-meta">${rx.gender} · ${rx.age}</span>
+              <span class="rx-patient-phone">${rx.phone}</span>
+            </div>
+            <button class="btn-take-rx" onclick="takePrescription(${index})">提单</button>
+          </div>
+          <div class="rx-diagnosis-box">
+            <span class="rx-diagnosis-label">处方诊断:</span>
+            <span class="rx-diagnosis-val">${rx.diagnosis}</span>
+          </div>
+          <div class="rx-footer-row">
+            <span class="rx-no-muted">处方单号：${rx.rxNo}</span>
+            <span class="rx-status-tag">待提单</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // 提单操作：允许提取多张处方单累加加入购物车，删除二次清空限制
+    function takePrescription(index) {
+      const targetRx = prescriptionList[index];
+
+      // 1. 自动关联会员
+      currentMember.isBound = true;
+      currentMember.name = targetRx.patientName;
+      currentMember.phone = targetRx.realPhone || targetRx.phone;
+      updateMemberDisplay();
+
+      // 2. 自动载入处方药品到订单（支持多张处方单累加）并配置追溯码采集需求
+      const newRxItem = {
+        id: Date.now(),
+        isRx: true,
+        rxNo: targetRx.rxNo,
+        name: targetRx.drug.name,
+        batch: targetRx.drug.batch,
+        price: targetRx.drug.price,
+        count: targetRx.drug.count,
+        img: targetRx.drug.img,
+        traceCodes: [], // 已采集的追溯码
+        traceRequired: targetRx.drug.count // 必须按药品数量采集
+      };
+      cartItems.push(newRxItem);
+
+      // 3. 从待提单列表中彻底移除（已提单不展示）
+      prescriptionList.splice(index, 1);
+      renderRxList();
+
+      closeRxModal();
+      updateCartSummary();
+      showToast(`处方 [${targetRx.rxNo}] 提单成功！请采集 ${newRxItem.traceRequired} 盒追溯码`);
+
+      // 4. 弹出该处方药追溯码采集半窗
+      setTimeout(() => {
+        openTraceCollectModal(newRxItem);
+      }, 300);
+    }
+
+    // 处方药追溯码强合规采集控制
+    let currentTraceItem = null;
+
+    function openTraceCollectModal(item) {
+      currentTraceItem = item;
+      document.getElementById("tcDrugImg").src = item.img;
+      document.getElementById("tcDrugName").textContent = item.name;
+      document.getElementById("tcDrugBatch").textContent = `批号：${item.batch} | 处方单号：${item.rxNo || "已核验"}`;
+      document.getElementById("tcDrugPrice").textContent = `¥${item.price} / 盒`;
+      document.getElementById("tcRequiredCount").textContent = `共需采集 ${item.traceRequired} 盒`;
+
+      renderTraceCollectUI();
+      closeAllModals();
+      document.getElementById("traceCollectModalMask").classList.add("show");
+    }
+
+    function closeTraceCollectModal() {
+      document.getElementById("traceCollectModalMask").classList.remove("show");
+      updateCartSummary();
+    }
+
+    function renderTraceCollectUI() {
+      if (!currentTraceItem) return;
+      const codes = currentTraceItem.traceCodes || [];
+      const required = currentTraceItem.traceRequired || 1;
+      const collected = codes.length;
+
+      document.getElementById("tcProgressText").textContent = `已采 ${collected} / 需采 ${required} 盒`;
+      const pct = Math.min(100, (collected / required) * 100);
+      const progressBar = document.getElementById("tcProgressBar");
+      progressBar.style.width = `${pct}%`;
+      progressBar.style.background = (collected === required) ? "#34c759" : "linear-gradient(90deg, #fa8c16, #009fe8)";
+
+      // 扫描按钮状态
+      const btnScan = document.getElementById("btnSimulateScanOne");
+      const btnScanText = document.getElementById("btnScanTraceText");
+      if (collected < required) {
+        btnScan.disabled = false;
+        btnScan.style.opacity = "1";
+        btnScanText.textContent = `模拟扫描第 ${collected + 1} 盒追溯码`;
+      } else {
+        btnScan.disabled = true;
+        btnScan.style.opacity = "0.5";
+        btnScanText.textContent = `本药品追溯码已全部采齐 ✔`;
+      }
+
+      // 追溯码条目列表渲染
+      const listContainer = document.getElementById("tcCodeListContainer");
+      listContainer.innerHTML = "";
+      for (let i = 0; i < required; i++) {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:6px; font-size:12.5px;";
+        
+        if (i < collected) {
+          row.style.background = "#f6ffed";
+          row.style.border = "1px solid #b7eb8f";
+          row.innerHTML = `
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="color:#52c41a; font-weight:bold;">✔ 盒 ${i + 1}:</span>
+              <span style="font-family:Consolas, monospace; font-weight:600; color:#1f2329;">${codes[i]}</span>
+            </div>
+            <span style="color:#ff4d4f; cursor:pointer; font-size:13px;" onclick="removeOneTraceCode(${i})" title="删除重扫">✕</span>
+          `;
+        } else {
+          row.style.background = "#fffbe6";
+          row.style.border = "1px dashed #ffd591";
+          row.innerHTML = `
+            <div style="display:flex; align-items:center; gap:6px; color:#d46b08;">
+              <span>⏳ 盒 ${i + 1}:</span>
+              <span>待扫入药品盒身 20 位追溯条码...</span>
+            </div>
+            <span style="font-size:11px; color:#fa8c16;">待扫</span>
+          `;
+        }
+        listContainer.appendChild(row);
+      }
+
+      // 底部完成按钮控制
+      const btnFinish = document.getElementById("btnFinishTraceCollect");
+      if (collected === required) {
+        btnFinish.disabled = false;
+        btnFinish.style.background = "#009fe8";
+        btnFinish.textContent = "完成采集并确认";
+      } else {
+        btnFinish.disabled = true;
+        btnFinish.style.background = "#ccc";
+        btnFinish.textContent = `请按数量采齐追溯码后完成 (${collected}/${required})`;
+      }
+    }
+
+    // 模拟扫入某一盒追溯码
+    function simulateScanOneTraceCode() {
+      if (!currentTraceItem) return;
+      if (!currentTraceItem.traceCodes) currentTraceItem.traceCodes = [];
+      if (currentTraceItem.traceCodes.length >= currentTraceItem.traceRequired) {
+        showToast("该药品追溯码已全部采齐！");
+        return;
+      }
+
+      const seq = currentTraceItem.traceCodes.length + 1;
+      const traceCode = "84300298" + Math.floor(Math.random() * 899999999999 + 100000000000);
+      currentTraceItem.traceCodes.push(traceCode);
+
+      showToast(`滴~ 第 ${seq} 盒追溯码已核验录入！`);
+      renderTraceCollectUI();
+      updateCartSummary();
+    }
+
+    // 移除某盒重扫
+    function removeOneTraceCode(index) {
+      if (!currentTraceItem || !currentTraceItem.traceCodes) return;
+      currentTraceItem.traceCodes.splice(index, 1);
+      renderTraceCollectUI();
+      updateCartSummary();
+      showToast(`已删除第 ${index + 1} 盒追溯码，请重新扫描`);
+    }
+
+    // 完成采集
+    function finishTraceCollect() {
+      if (!currentTraceItem) return;
+      if (currentTraceItem.traceCodes.length < currentTraceItem.traceRequired) {
+        showToast("追溯码尚未采齐，请继续扫描");
+        return;
+      }
+      closeTraceCollectModal();
+      showToast("处方药追溯码全部采集完毕，允许去收银！");
+    }
+
+    // 购物车结算信息计算与渲染
+    function updateCartSummary() {
+      const totalCount = cartItems.reduce((sum, item) => sum + item.count, 0);
+      const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.count), 0).toFixed(1);
+
+      const countBadge = document.getElementById("cartCountBadge");
+      const priceDisplay = document.getElementById("cartPriceDisplay");
+      const btnGoPay = document.getElementById("btnGoPay");
+      const cartDrawerPrice = document.getElementById("cartDrawerPrice");
+      const btnDrawerPay = document.getElementById("btnDrawerPay");
+
+      // 检查处方药是否采齐追溯码
+      const uncompletedRxItem = cartItems.find(item => item.isRx && (item.traceCodes || []).length < item.traceRequired);
+
+      if (totalCount > 0) {
+        countBadge.style.display = "block";
+        countBadge.textContent = totalCount;
+        priceDisplay.textContent = `¥${totalPrice}`;
+        cartDrawerPrice.textContent = `¥${totalPrice}`;
+
+        if (uncompletedRxItem) {
+          // 未采齐追溯码，【去收银】高亮醒目橙色提示待采集
+          btnGoPay.disabled = false;
+          btnGoPay.textContent = `待采追溯码 (${uncompletedRxItem.traceCodes.length}/${uncompletedRxItem.traceRequired})`;
+          btnGoPay.style.background = "#fa8c16";
+          btnDrawerPay.disabled = false;
+          btnDrawerPay.textContent = `待采追溯码 (${uncompletedRxItem.traceCodes.length}/${uncompletedRxItem.traceRequired})`;
+          btnDrawerPay.style.background = "#fa8c16";
+        } else {
+          // 已全部采齐，允许点击【去收银】
+          btnGoPay.disabled = false;
+          btnGoPay.textContent = "去收银";
+          btnGoPay.style.background = "";
+          btnDrawerPay.disabled = false;
+          btnDrawerPay.textContent = "去收款";
+          btnDrawerPay.style.background = "";
+        }
+      } else {
+        countBadge.style.display = "none";
+        priceDisplay.textContent = "¥0";
+        btnGoPay.disabled = true;
+        btnGoPay.textContent = "去收银";
+        btnGoPay.style.background = "";
+        cartDrawerPrice.textContent = "¥0.0";
+        btnDrawerPay.disabled = true;
+        btnDrawerPay.textContent = "去收款";
+        btnDrawerPay.style.background = "";
+      }
+
+      applyPromoDiscount(totalPrice);
+      renderCartList();
+    }
+
+    function applyPromoDiscount(baseTotal) {
+      let finalPrice = parseFloat(baseTotal) || 0;
+      const checkedPromo = document.querySelector(".promo-item.checked");
+      if (checkedPromo && finalPrice > 0) {
+        const discount = parseFloat(checkedPromo.getAttribute("data-discount")) || 0;
+        finalPrice = Math.max(0.1, finalPrice - discount);
+      }
+      finalPrice = finalPrice.toFixed(1);
+
+      document.getElementById("payTotalAmount").textContent = `¥${finalPrice}`;
+      document.getElementById("scanPayCodeAmount").textContent = `¥${finalPrice}`;
+      document.getElementById("successAmountDisplay").textContent = `¥${finalPrice}`;
+
+      if (currentMember) {
+        const minDeduct = Math.min(parseFloat(finalPrice), currentMember.cardBalance).toFixed(1);
+        document.getElementById("cardDeductAmount").value = minDeduct;
+        document.getElementById("pwdDeductShow").textContent = `¥${minDeduct}`;
+      }
+    }
+
+    function renderCartList() {
+      const container = document.getElementById("cartListContainer");
+      if (cartItems.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">购物车暂无商品，请扫描添加</div>';
+        return;
+      }
+
+      container.innerHTML = "";
+      cartItems.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "cart-item-card";
+        div.innerHTML = `
+          <img class="cart-item-img" src="${item.img}" alt="药品">
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-batch">
+              批号 ${item.batch}
+              ${item.traceCode ? `<span style="color:#fa8c16; background:#fff7e6; border:1px solid #ffd591; padding:0 4px; border-radius:2px; font-size:10px; margin-left:4px;">追溯码:${item.traceCode.slice(-6)}</span>` : ""}
+              ${item.isRx ? `
+                <div style="margin-top:2px;">
+                  ${(item.traceCodes || []).length === item.traceRequired ? 
+                    `<span style="color:#389e0d; background:#f6ffed; border:1px solid #b7eb8f; padding:1px 5px; border-radius:3px; font-size:10.5px; font-weight:600;">✔ 追溯码已采齐 (${item.traceCodes.length}/${item.traceRequired}盒)</span>` : 
+                    `<span style="color:#d46b08; background:#fffbe6; border:1px solid #ffd591; padding:1px 5px; border-radius:3px; font-size:10.5px; font-weight:600; cursor:pointer;" onclick="openTraceCollectModal(cartItems[${index}])">⚠️ 追溯码待采 (${(item.traceCodes || []).length}/${item.traceRequired}盒) 点击补采</span>`
+                  }
+                </div>
+              ` : ""}
+            </div>
+            <div class="cart-item-bottom">
+              <span class="cart-item-price">¥${item.price}</span>
+              <div class="stepper">
+                <button class="step-btn" onclick="updateItemCount(${index}, -1)">-</button>
+                <input type="text" class="step-val" value="${item.count}" readonly>
+                <button class="step-btn" onclick="updateItemCount(${index}, 1)">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateItemCount(index, delta) {
+      cartItems[index].count += delta;
+      if (cartItems[index].count <= 0) {
+        cartItems.splice(index, 1);
+      }
+      updateCartSummary();
+    }
+
+    function clearCart() {
+      cartItems = [];
+      updateCartSummary();
+      showToast("购物车已清空");
+    }
+
+    function openCartModal() {
+      closeAllModals();
+      renderCartList();
+      document.getElementById("cartModalMask").classList.add("show");
+    }
+
+    function closeCartModal() {
+      document.getElementById("cartModalMask").classList.remove("show");
+    }
+
+    // 键盘切换与提交
+    function openKeypad(mode) {
+      closeAllModals();
+      switchKeypadMode(mode || "drug");
+      document.getElementById("keypadDrawer").classList.add("show");
+    }
+
+    // 模拟扫描国家药品追溯码 (一物一码快速核验添药)
+    function simulateScanTraceCode() {
+      const traceCode = "84300298" + Math.floor(Math.random() * 899999999999 + 100000000000);
+      keypadBuffer = traceCode;
+      document.getElementById("keypadDisplay").textContent = traceCode;
+      
+      showToast("正在核验国家药品追溯码...");
+      
+      setTimeout(() => {
+        cartItems.push({
+          id: Date.now(),
+          name: "磷酸奥司他韦颗粒 10g/10包",
+          batch: "883275088608020848",
+          traceCode: traceCode,
+          price: 42.9,
+          count: 1,
+          img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=120&q=80"
+        });
+
+        closeKeypad();
+        updateCartSummary();
+        showToast(`【追溯码核验成功】已添加 1 盒 磷酸奥司他韦颗粒！`);
+      }, 450);
+    }
+
+    function switchKeypadMode(mode) {
+      keypadTarget = mode;
+      document.getElementById("tagDrugCode").classList.toggle("active", mode === "drug");
+      document.getElementById("tagMemberCode").classList.toggle("active", mode === "member");
+
+      if (mode === "member") {
+        keypadBuffer = "18510178068";
+      } else {
+        keypadBuffer = "692138940123";
+      }
+      document.getElementById("keypadDisplay").textContent = keypadBuffer;
+    }
+
+    function closeKeypad() {
+      document.getElementById("keypadDrawer").classList.remove("show");
+    }
+
+    function pressKey(num) {
+      if (keypadBuffer.length < 20) {
+        keypadBuffer += num;
+        document.getElementById("keypadDisplay").textContent = keypadBuffer;
+      }
+    }
+
+    function pressBackspace() {
+      keypadBuffer = keypadBuffer.slice(0, -1);
+      document.getElementById("keypadDisplay").textContent = keypadBuffer;
+    }
+
+    function submitKeypadCode() {
+      if (!keypadBuffer) {
+        showToast("请输入有效编码或会员号");
+        return;
+      }
+
+      if (keypadTarget === "member") {
+        // 录入会员：仅更新左上角展示，不弹出药品底窗
+        currentMember.isBound = true;
+        currentMember.phone = keypadBuffer;
+        currentMember.name = "会员顾客";
+        updateMemberDisplay();
+        closeKeypad();
+        showToast(`已成功录入会员：${keypadBuffer}`);
+      } else {
+        // 输入药品编码：才弹出药品选择底窗
+        closeKeypad();
+        showToast(`已识别药品编码：${keypadBuffer}`);
+        setTimeout(openBatchModal, 300);
+      }
+    }
+
+    function goToCheckout() {
+      // 强合规校验：处方药必须按数量采满追溯码才允许去收银
+      const uncompletedRx = cartItems.find(item => item.isRx && (item.traceCodes || []).length < item.traceRequired);
+      if (uncompletedRx) {
+        showToast(`处方药需采集 ${uncompletedRx.traceRequired} 盒追溯码后才允许去收银！`);
+        openTraceCollectModal(uncompletedRx);
+        return;
+      }
+
+      closeAllModals();
+      switchPage("pagePay");
+    }
+
+    function selectPayMethod(type) {
+      selectedPayMethod = type;
+      document.getElementById("methodQr").classList.toggle("active", type === "qr");
+      document.getElementById("methodCash").classList.toggle("active", type === "cash");
+      const methodCardEl = document.getElementById("methodCard");
+      if (methodCardEl) methodCardEl.classList.toggle("active", type === "card");
+
+      const cashRow = document.getElementById("cashInputRow");
+      const cardPanel = document.getElementById("memberCardPanel");
+
+      cashRow.style.display = (type === "cash") ? "flex" : "none";
+      cardPanel.classList.toggle("show", type === "card");
+    }
+
+    function validateCardDeduct(input) {
+      const currentPayTotal = parseFloat(document.getElementById("payTotalAmount").textContent.replace("¥", "")) || 0;
+      const maxLimit = Math.min(currentPayTotal, currentMember.cardBalance);
+      let val = parseFloat(input.value) || 0;
+
+      if (val > maxLimit) {
+        showToast(`扣款金额不能大于上限: ¥${maxLimit}`);
+        input.value = maxLimit.toFixed(1);
+      }
+    }
+
+    function calcChange() {
+      const inputVal = parseFloat(document.getElementById("cashReceived").value) || 0;
+      const totalAmount = parseFloat(document.getElementById("payTotalAmount").textContent.replace("¥", "")) || 0;
+      const change = inputVal - totalAmount;
+      const changeEl = document.getElementById("cashChangeVal");
+      if (change > 0) {
+        changeEl.textContent = `¥${change.toFixed(1)}`;
+      } else {
+        changeEl.textContent = "¥0.0";
+      }
+    }
+
+    function selectPromoSingle(el) {
+      const isAlreadyChecked = el.classList.contains("checked");
+      document.querySelectorAll(".promo-item").forEach(item => item.classList.remove("checked"));
+
+      if (!isAlreadyChecked) {
+        el.classList.add("checked");
+        showToast(`已单选应用：${el.querySelector(".promo-name").textContent}`);
+      } else {
+        showToast("已取消选择促销套餐");
+      }
+
+      const baseTotal = cartItems.reduce((sum, item) => sum + (item.price * item.count), 0);
+      applyPromoDiscount(baseTotal);
+    }
+
+    // 优化 4：确认收款处理
+    function confirmPayment() {
+      const totalAmount = parseFloat(document.getElementById("payTotalAmount").textContent.replace("¥", "")) || 0;
+      if (totalAmount <= 0) {
+        showToast("订单金额为0，无需收款");
+        return;
+      }
+
+      if (selectedPayMethod === "qr") {
+        // 优化 4：唤起扫码页面，扫顾客付款码！
+        switchPage("pageScanCustomerCode");
+      } else if (selectedPayMethod === "card") {
+        openPwdModal();
+      } else {
+        const cashVal = parseFloat(document.getElementById("cashReceived").value) || 0;
+        if (cashVal < totalAmount) {
+          showToast("实收金额不足，请核对后再结算");
+          return;
+        }
+        document.getElementById("receiptPayMethod").textContent = "现金支付";
+        showSuccessModal();
+      }
+    }
+
+    // 优化 4：模拟识别顾客付款码并扣款成功
+    function simulateScanCustomerPayCode() {
+      showToast("滴~ 识别到微信/支付宝付款码 2801938201948271");
+      setTimeout(() => {
+        document.getElementById("receiptPayMethod").textContent = "聚合扫码 (微信/支付宝)";
+        showSuccessModal();
+      }, 600);
+    }
+
+    function openPwdModal() {
+      closeAllModals();
+      const deductVal = document.getElementById("cardDeductAmount").value || "0.0";
+      document.getElementById("pwdDeductShow").textContent = `¥${deductVal}`;
+      document.getElementById("pwdModalMask").classList.add("show");
+    }
+
+    function closePwdModal() {
+      document.getElementById("pwdModalMask").classList.remove("show");
+    }
+
+    function submitCardPayment() {
+      closePwdModal();
+      document.getElementById("receiptPayMethod").textContent = "会员储值卡支付";
+      showToast("储值卡扣款成功！");
+      setTimeout(showSuccessModal, 300);
+    }
+
+    function showSuccessModal() {
+      closeAllModals();
+      const orderNo = "898" + Math.floor(Math.random() * 899999999999999 + 100000000000000);
+      document.getElementById("receiptOrderNo").textContent = orderNo;
+      document.getElementById("successModalMask").classList.add("show");
+    }
+
+    function closeSuccessModal() {
+      document.getElementById("successModalMask").classList.remove("show");
+    }
+
+    function continueSelling() {
+      closeSuccessModal();
+      cartItems = [];
+      document.querySelectorAll(".promo-item").forEach((item, idx) => {
+        item.classList.toggle("checked", idx === 0);
+      });
+      updateCartSummary();
+      switchPage("pageScan");
+      showToast("已开启下一单收银");
+    }
+
+    function openStoreModal() {
+      closeAllModals();
+      document.getElementById("storeModalMask").classList.add("show");
+    }
+
+    function closeStoreModal() {
+      document.getElementById("storeModalMask").classList.remove("show");
+    }
+
+    function pickStore(name, el) {
+      currentStore = name;
+      document.getElementById("currentStoreName").textContent = name;
+
+      document.querySelectorAll(".store-list-item").forEach(item => {
+        item.classList.remove("selected");
+        item.querySelector("span:last-child").textContent = "";
+      });
+      el.classList.add("selected");
+      el.querySelector("span:last-child").textContent = "✔";
+
+      closeStoreModal();
+      showToast(`已切换门店: ${name}`);
+    }
+
+    function toggleTorch() {
+      isTorchOn = !isTorchOn;
+      document.getElementById("torchLabel").textContent = isTorchOn ? "轻触关闭" : "轻触照亮";
+      showToast(isTorchOn ? "已开启手电筒补光" : "已关闭补光");
+    }
+
+    function wakeScreen() {
+      document.getElementById("sleepMask").classList.remove("show");
+    }
+
+    // 页面初始化运行：初始状态空置
+    updateCartSummary();
+    updateMemberDisplay();
+    renderRxList();
+  </script>
+</body>
+</html>

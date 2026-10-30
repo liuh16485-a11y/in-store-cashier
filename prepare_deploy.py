@@ -1,0 +1,81 @@
+import os
+import shutil
+import subprocess
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')
+repo_dir = r'c:\文件\谷歌AI\老百姓\新店型'
+remote_url = 'https://github.com/liuh16485-a11y/in-store-cashier.git'
+
+# 1. Ensure index.html is the mobile cashier app for GitHub Pages
+src_cashier = os.path.join(repo_dir, '手机端店内收银.html')
+dst_index = os.path.join(repo_dir, 'index.html')
+shutil.copyfile(src_cashier, dst_index)
+
+# Ensure prd-editor.html for friendly URL
+src_editor = os.path.join(repo_dir, '店内收银产品需求文档_在线编辑.html')
+dst_editor = os.path.join(repo_dir, 'prd-editor.html')
+shutil.copyfile(src_editor, dst_editor)
+
+# 2. Write a clean .gitignore
+gitignore_content = """__pycache__/
+*.pyc
+*.log
+edge_test/
+edge_cdp_profile/
+screenshots_user/
+screenshots_clean/
+inspect_*.py
+test_*.png
+"""
+with open(os.path.join(repo_dir, '.gitignore'), 'w', encoding='utf-8') as f:
+    f.write(gitignore_content)
+
+# 3. Create a comprehensive, beautiful README.md
+readme_content = """# 活力坐标（Vitality Coordinates）店内移动收银系统
+
+> 面向智慧零售连锁药房的移动手持端（PDA / 智能手机）全渠道一体化收银系统。
+
+---
+
+## 🌐 在线访问入口 (GitHub Pages)
+
+- 📱 **移动收银真机交互原型系统**：[点击直接体验](https://liuh16485-a11y.github.io/in-store-cashier/)
+- 📄 **产品需求说明书 (PRD) 在线编辑器与预览**：[点击查阅 PRD](https://liuh16485-a11y.github.io/in-store-cashier/prd-editor.html)
+
+---
+
+## 📌 核心 7 步业务流转
+
+1. **进入店内收银**：工作台冷启动，购物车空置（0 件、¥0.0），去收银按钮默认灰阶禁用。
+2. **录入会员**：11 位手机号九宫格数字键盘录入，身份鉴权后左上角常驻渲染 `[👤 手机号]` 胶囊徽标。
+3. **添品方式**：
+   - **3.1 扫69码添品** $\\rightarrow$ **3.1.1 选择批号**：扫描条码识别商品，唤起在库批次与库存半窗调节入车；
+   - **3.2 扫追溯码添品**：一键识别 20 位以 `8430` 开头国家药品追溯码，自动匹配批号并直通入车；
+   - **3.3 提取处方单** $\\rightarrow$ **3.3.1 采集追溯码**：展示患者脱敏信息与诊断，处方药 1:1 逐盒合规采集追溯码（未采齐强拦截锁定结算）。
+4. **去收银**：购物车抽屉明细核验，处方药合规解锁后进入收银结算台。
+5. **选择促销套餐**：结算页默认自动勾选最优惠套餐（立减 ¥30.0），金额动态联动抵扣。
+6. **选择支付方式**：
+   - **6.1 聚合收款** $\\rightarrow$ **6.1.1 扫顾客付款码**：唤起后置摄像头反扫顾客微信/支付宝付款码；
+   - **6.2 现金收款**：输入实收现金数额，系统自动大字计算并展示找零；
+   - **6.3 会员储值卡** $\\rightarrow$ **6.3.1 支付密码**：脱敏姓名与余额展示，自动填充可用扣款上限，调起 6 位 PIN 码安全弹窗。
+7. **收款完成，重置回购物车**：生成 18 位收银流水号，点击【继续收款】一键重置返回第一现场。
+
+---
+
+## 📂 项目核心文件清单
+
+| 文件路径 | 说明 |
+| :--- | :--- |
+| `index.html` / `手机端店内收银.html` | 移动端店内收银交互系统（纯本地单文件，自带 iPhone 灵动岛外壳与全套交互动效） |
+| `prd-editor.html` / `店内收银产品需求文档_在线编辑.html` | PRD 在线编辑与实时渲染系统（支持双向修改、导出 Word、Mermaid 即时图表） |
+| `店内收银产品需求文档_PRD.docx` | 完整格式的 Word 需求规格说明书（已内嵌高清业务流转图与全套操作节点原型图） |
+| `店内收银产品需求文档_PRD.md` | PRD Markdown 源码文件 |
+| `业务流程图.png` | 核心 7 步业务流程高清矢量渲染图 |
+| `节点1_进入店内收银.png` ~ `节点7_收款完成与重置.png` | 各操作节点 2x Retina 高清原型截图 |
+"""
+
+with open(os.path.join(repo_dir, 'README.md'), 'w', encoding='utf-8') as f:
+    f.write(readme_content)
+
+print('Prepared files successfully!')
